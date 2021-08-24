@@ -24,13 +24,30 @@ def SwitchKeyboardLanguage():
 
 def CommandAnalysis(command):
     splitted_command = command.split(" ")
-    if splitted_command[0] == "Sergey":
-        if splitted_command[1] == "switch" or splitted_command[1] == "change" and splitted_command[2] == "keyboard" and splitted_command[3] == "language":
-            SwitchKeyboardLanguage()
+
+    # Replace the wrong name
+    if splitted_command[0] == "Sergei":
+        splitted_command[0] = "Sergey"
+
+    # Create the right command for print to user
+    command = " ".join(map(str, splitted_command))
+    UserSays(command)
+
+    if splitted_command[0] == strings.name_of_assistant:
+        if splitted_command[1] == "switch" or splitted_command[1] == "change":
+            if splitted_command[2] == "keyboard" and splitted_command[3] == "language" or\
+                    splitted_command[2] == "language":
+                SwitchKeyboardLanguage()
+    else:
+        print(command)
 
 
 def AssistantSays(text):
     print(f'{strings.name_of_assistant}: {text}')
+
+
+def UserSays(text):
+    print(f'You: {text}')
 
 
 # Voiceover a command
@@ -50,12 +67,19 @@ def CommandRecognition():
         audio = r.listen(source)
         # noinspection PyBroadException
         try:
-            query = r.recognize_google(audio)
-            return query
+            command = r.recognize_google(audio)
+            return command
         except:
             AssistantSays("Try Again")
 
 
-def Main():
-    command = "Sergey change keyboard language"
+def Start():
+    print(strings.welcome_str)
+    # command = CommandRecognition()
+    # command = "Sergey switch language"
+    command = "Sergei switch keyboard language"
     CommandAnalysis(command)
+
+
+def Main():
+    Start()
