@@ -14,13 +14,18 @@ engine.setProperty('rate', 150)
 
 
 def SwitchKeyboardLanguage():
-    keyboard.send("shift+alt", do_press=True)
+    # noinspection PyBroadException
+    try:
+        keyboard.send("shift+alt")
+        AssistantSays("Language is switched")
+    except:
+        pass
 
 
 def CommandAnalysis(command):
     splitted_command = command.split(" ")
     if splitted_command[0] == "Sergey":
-        if splitted_command[1] == "switch" and splitted_command[2] == "keyboard" and splitted_command[3] == "language":
+        if splitted_command[1] == "switch" or splitted_command[1] == "change" and splitted_command[2] == "keyboard" and splitted_command[3] == "language":
             SwitchKeyboardLanguage()
 
 
@@ -52,5 +57,5 @@ def CommandRecognition():
 
 
 def Main():
-    command = "Sergey switch keyboard language"
+    command = "Sergey change keyboard language"
     CommandAnalysis(command)
