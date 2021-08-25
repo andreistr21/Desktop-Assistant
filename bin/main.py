@@ -1,7 +1,9 @@
+import os
 import speech_recognition as sr
 import pyttsx3
 import keyboard
 import webbrowser
+import subprocess
 
 import strings
 
@@ -43,11 +45,51 @@ def FirstLetterToUpperCase(list_of_words):
     list_of_words[0] = first_word
 
 
+def PowerShellOutputParsing(string):
+    # Find position form which cut
+    first_pos = string.find("AppID")
+    # Find position to which cut
+    second_pos = string.find("Name", first_pos + 5)
+
+    # Cutting
+    app_id = ""
+    if second_pos == -1:
+        app_id = string[first_pos + 8: len(string) - 8]
+    else:
+        app_id = string[first_pos + 8: second_pos - 4]
+
+    app_id = app_id.replace("\r", "")
+    app_id = app_id.replace("\n", "")
+    if app_id.find("  "):
+        app_id = app_id.replace("  ", "")
+
+    return app_id
+
+
+def OpenProgram(app_name):
+    app_id = None
+    # noinspection PyBroadException
+    try:
+        # Get all installed apps and theirs ID's in PC
+        app = subprocess.run(["powershell", "-Command",
+                              "get-StartApps | Where-Object { $_.Name -like '*" + app_name + "*' } | Format-List"],
+                             capture_output=True).stdout.decode()
+
+        # Return only app id
+        app_id = PowerShellOutputParsing(app)
+
+    except:
+        pass
+
+    # Open the program
+    os.system(f"start explorer shell:appsfolder\{app_id}")
+
+
 def CommandAnalysis(command):
     splitted_command = command.split(" ")
 
     # Replace the wrong name
-    if splitted_command[0] == "Sergei":
+    if splitted_command[0] == "Sergei" or splitted_command[0] == "sergei":
         splitted_command[0] = "Sergey"
 
     FirstLetterToUpperCase(splitted_command)
@@ -80,6 +122,7 @@ def CommandAnalysis(command):
                 # Create right quary
                 for i in range(2, len(splitted_command)):
                     quary += splitted_command[i]
+                    # Add space between words
                     if i != len(splitted_command) - 1:
                         quary += " "
 
@@ -91,11 +134,23 @@ def CommandAnalysis(command):
                 # Create right quary
                 for i in range(1, len(splitted_command)):
                     quary += splitted_command[i]
+                    # Add spaces between words
                     if i != len(splitted_command) - 1:
                         quary += " "
 
                 url = URLCreator(quary)
                 webbrowser.open(url)
+
+        # Open programs
+        if splitted_command[0] == "Open":
+            app_name = ""
+            for i in range(1, len(splitted_command)):
+                app_name += splitted_command[i]
+                # Add spaces between words
+                if i != len(splitted_command) - 1:
+                    app_name += " "
+
+            OpenProgram(app_name)
 
         if splitted_command[0] == "Help":
             AssistantSays(strings.help_str)
@@ -138,5 +193,5 @@ def Main():
     print(strings.welcome_str)
     # command = CommandRecognition()
     # command = "Sergey switch language"
-    command = "Sergey change language"
+    command = "Open steam"
     CommandAnalysis(command)
