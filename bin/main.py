@@ -20,7 +20,7 @@ def SwitchKeyboardLanguage():
         keyboard.send("shift+alt")
         AssistantSays("Language is switched")
     except:
-        pass
+        AssistantSays("Can't changed keyboard language")
 
 
 def URLCreator(quary):
@@ -66,12 +66,14 @@ def CommandAnalysis(command):
                     SwitchKeyboardLanguage()
 
         # Search in the Internet
+        # Quary: What\who is (it) ...
         if splitted_command[0] == "What" or splitted_command[0] == "Who":
             if (splitted_command[1] == "is" and splitted_command[2] == "it") or splitted_command[1] == "is":
                 quary = " ".join(splitted_command)
 
                 url = URLCreator(quary)
                 webbrowser.open(url)
+        # Quary: Search about\for ...
         elif splitted_command[0] == "Search":
             if splitted_command[1] == "about" or splitted_command[1] == "for":
                 quary = ""
@@ -83,6 +85,7 @@ def CommandAnalysis(command):
 
                 url = URLCreator(quary)
                 webbrowser.open(url)
+            # Quary: Search ...
             else:
                 quary = ""
                 # Create right quary
@@ -94,6 +97,8 @@ def CommandAnalysis(command):
                 url = URLCreator(quary)
                 webbrowser.open(url)
 
+        if splitted_command[0] == "Help":
+            AssistantSays(strings.help_str)
     except:
         pass
 
@@ -133,5 +138,5 @@ def Main():
     print(strings.welcome_str)
     # command = CommandRecognition()
     # command = "Sergey switch language"
-    command = "search huge microwave in the shop"
+    command = "Sergey change language"
     CommandAnalysis(command)
