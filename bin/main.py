@@ -59,7 +59,7 @@ def ChooseAppFromList(dictionary, app_name):
         elif len(temp_dict) == 1:
             return list(temp_dict.values())[0]
         elif len(temp_dict) > 1:
-            if len(app_name) == 1:
+            if len(app_name.split()) == 1:  # Сheck the number of words in the application name
                 shortest_name = ""
                 size = 10000
                 for name in temp_dict:
@@ -241,8 +241,8 @@ def CommandRecognition():
 
 
 def Main():
-    AssistantSays(strings.welcome_str)
+    # AssistantSays(strings.welcome_str)
     # command = CommandRecognition()
     # command = "Sergey switch language"
-    command = "Open firefox"
+    command = "Open messenger"
     CommandAnalysis(command)
