@@ -209,6 +209,8 @@ def CommandAnalysis(command):
 
 def AssistantSays(text):
     print(f'{strings.name_of_assistant}: {text}')
+    engine.say(text)
+    engine.runAndWait()
 
 
 def UserSays(text):
@@ -239,7 +241,7 @@ def CommandRecognition():
 
 
 def Main():
-    print(strings.welcome_str)
+    AssistantSays(strings.welcome_str)
     # command = CommandRecognition()
     # command = "Sergey switch language"
     command = "Open firefox"
