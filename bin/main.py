@@ -45,23 +45,70 @@ def FirstLetterToUpperCase(list_of_words):
     list_of_words[0] = first_word
 
 
-def PowerShellOutputParsing(string):
-    # Find position form which cut
-    first_pos = string.find("AppID")
-    # Find position to which cut
-    second_pos = string.find("Name", first_pos + 5)
+def ChooseAppFromList(dictionary, app_name):
+    # print(dictionary)
+    temp_dict = dictionary.copy()
+    if 1 < len(dictionary) < 4:
+        # Delete app if this is web site
+        for name in dictionary:
+            if temp_dict[name].find("http://") != -1:
+                del temp_dict[name]
 
-    # Cutting
-    app_id = ""
-    if second_pos == -1:
-        app_id = string[first_pos + 8: len(string) - 8]
-    else:
-        app_id = string[first_pos + 8: second_pos - 4]
+        if len(temp_dict) == 0:
+            temp_dict = dictionary.copy()
+        elif len(temp_dict) == 1:
+            return list(temp_dict.values())[0]
+        elif len(temp_dict) > 1:
+            if len(app_name) == 1:
+                shortest_name = ""
+                size = 10000
+                for name in temp_dict:
+                    new_size = len(temp_dict[name])
+                    if new_size < size:
+                        size = new_size
+                        shortest_name = name
 
-    app_id = app_id.replace("\r", "")
-    app_id = app_id.replace("\n", "")
-    if app_id.find("  "):
-        app_id = app_id.replace("  ", "")
+                return dictionary[shortest_name]
+            else:
+                return list(dictionary.values())[0]
+
+    elif len(dictionary) == 1:
+        return list(dictionary.values())[0]
+
+
+# Parsing output of powershell to dictionary
+def PowerShellOutputParsing(string, app_name):
+    apps_dictionary = {}
+    name_pos = -8
+    app_id_pos = -8
+    while name_pos != -1:
+        name = ""
+        app_id = ""
+        name_pos = string.find("Name  : ", name_pos + 8)
+
+        if name_pos != -1:
+            app_id_pos = string.find("AppID : ", app_id_pos + 8)
+            next_name_pos = string.find("Name  : ", name_pos + 8)
+            name = string[name_pos + 8: app_id_pos]
+            if next_name_pos != -1:
+                app_id = string[app_id_pos + 8: next_name_pos]
+            else:
+                app_id = string[app_id_pos + 8: len(string)]
+
+            # Replace redundant chars in name
+            while name.find("\n") != -1 or name.find("\r") != -1 or name.find("  ") != -1:
+                name = name.replace("\n", "")
+                name = name.replace("\r", "")
+                name = name.replace("  ", " ")
+            # Replace redundant chars in app_id
+            while app_id.find("\n") != -1 or app_id.find("\r") != -1 or app_id.find("  ") != -1:
+                app_id = app_id.replace("\n", "")
+                app_id = app_id.replace("\r", "")
+                app_id = app_id.replace("  ", " ")
+
+            apps_dictionary[name] = app_id
+
+    app_id = ChooseAppFromList(apps_dictionary, app_name)
 
     return app_id
 
@@ -71,18 +118,20 @@ def OpenProgram(app_name):
     # noinspection PyBroadException
     try:
         # Get all installed apps and theirs ID's in PC
-        app = subprocess.run(["powershell", "-Command",
-                              "get-StartApps | Where-Object { $_.Name -like '*" + app_name + "*' } | Format-List"],
-                             capture_output=True).stdout.decode()
+        app_list = subprocess.run(["powershell", "-Command",
+                                   "get-StartApps | Where-Object { $_.Name -like '*" + app_name + "*' } | Format-List"],
+                                  capture_output=True).stdout.decode()
 
         # Return only app id
-        app_id = PowerShellOutputParsing(app)
+        app_id = PowerShellOutputParsing(app_list, app_name)
 
-    except:
-        pass
+    except Exception as e:
+        print(e)
 
     # Open the program
     os.system(f"start explorer shell:appsfolder\{app_id}")
+
+    AssistantSays(f'Opening "{app_name}" ...')
 
 
 def CommandAnalysis(command):
@@ -193,5 +242,5 @@ def Main():
     print(strings.welcome_str)
     # command = CommandRecognition()
     # command = "Sergey switch language"
-    command = "Open steam"
+    command = "Open firefox"
     CommandAnalysis(command)
