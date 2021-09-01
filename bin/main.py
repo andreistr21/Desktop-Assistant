@@ -11,9 +11,9 @@ import strings
 engine = pyttsx3.init()
 # noinspection PyUnresolvedReferences
 # Set voice type
-engine.setProperty('voice', engine.getProperty('voices')[1].id)
+engine.setProperty("voice", engine.getProperty("voices")[1].id)
 # Set speed of speech (words per minute)
-engine.setProperty('rate', 150)
+engine.setProperty("rate", 150)
 
 
 def SwitchKeyboardLanguage():
@@ -28,7 +28,7 @@ def SwitchKeyboardLanguage():
 def URLCreator(quary):
     temp = "https://www.google.com/search?q="
     quary = quary.replace(" ", "+")
-    url = f'{temp}{quary}'
+    url = f"{temp}{quary}"
 
     return url
 
@@ -59,7 +59,9 @@ def ChooseAppFromList(dictionary, app_name):
         elif len(temp_dict) == 1:
             return list(temp_dict.values())[0]
         elif len(temp_dict) > 1:
-            if len(app_name.split()) == 1:  # Сheck the number of words in the application name
+            if (
+                len(app_name.split()) == 1
+            ):  # Check the number of words in the application name
                 shortest_name = ""
                 size = 10000
                 for name in temp_dict:
@@ -89,19 +91,25 @@ def PowerShellOutputParsing(string, app_name):
         if name_pos != -1:
             app_id_pos = string.find("AppID : ", app_id_pos + 8)
             next_name_pos = string.find("Name  : ", name_pos + 8)
-            name = string[name_pos + 8: app_id_pos]
+            name = string[name_pos + 8 : app_id_pos]
             if next_name_pos != -1:
-                app_id = string[app_id_pos + 8: next_name_pos]
+                app_id = string[app_id_pos + 8 : next_name_pos]
             else:
-                app_id = string[app_id_pos + 8: len(string)]
+                app_id = string[app_id_pos + 8 : len(string)]
 
             # Replace redundant chars in name
-            while name.find("\n") != -1 or name.find("\r") != -1 or name.find("  ") != -1:
+            while (
+                name.find("\n") != -1 or name.find("\r") != -1 or name.find("  ") != -1
+            ):
                 name = name.replace("\n", "")
                 name = name.replace("\r", "")
                 name = name.replace("  ", " ")
             # Replace redundant chars in app_id
-            while app_id.find("\n") != -1 or app_id.find("\r") != -1 or app_id.find("  ") != -1:
+            while (
+                app_id.find("\n") != -1
+                or app_id.find("\r") != -1
+                or app_id.find("  ") != -1
+            ):
                 app_id = app_id.replace("\n", "")
                 app_id = app_id.replace("\r", "")
                 app_id = app_id.replace("  ", " ")
@@ -118,9 +126,16 @@ def OpenProgram(app_name):
     # noinspection PyBroadException
     try:
         # Get all installed apps and theirs ID's in PC
-        app_list = subprocess.run(["powershell", "-Command",
-                                   "get-StartApps | Where-Object { $_.Name -like '*" + app_name + "*' } | Format-List"],
-                                  capture_output=True).stdout.decode()
+        # fmt: off
+        app_list = subprocess.run(
+            [
+                "powershell",
+                "-Command",
+                "get-StartApps | Where-Object { $_.Name -like '*" + app_name + "*' } | Format-List",
+            ],
+            # fmt: on
+            capture_output=True,
+        ).stdout.decode()
 
         # Return only app id
         app_id = PowerShellOutputParsing(app_list, app_name)
@@ -132,6 +147,10 @@ def OpenProgram(app_name):
     os.system(f"start explorer shell:appsfolder\{app_id}")
 
     AssistantSays(f'Opening "{app_name}" ...')
+
+
+def ChangeAssistantVolume(volume_rate):
+    engine.setProperty("rate", volume_rate)
 
 
 def CommandAnalysis(command):
@@ -152,20 +171,24 @@ def CommandAnalysis(command):
         # Change keyboard language command
         if splitted_command[0] == strings.name_of_assistant:
             if splitted_command[1] == "switch" or splitted_command[1] == "change":
-                if (splitted_command[2] == "keyboard" and splitted_command[3] == "language") or \
-                        splitted_command[2] == "language":
+                if (
+                    splitted_command[2] == "keyboard"
+                    and splitted_command[3] == "language"
+                ) or splitted_command[2] == "language":
                     SwitchKeyboardLanguage()
 
         # Search in the Internet
         # Quary: What\who is (it) ...
         if splitted_command[0] == "What" or splitted_command[0] == "Who":
-            if (splitted_command[1] == "is" and splitted_command[2] == "it") or splitted_command[1] == "is":
+            if (
+                splitted_command[1] == "is" and splitted_command[2] == "it"
+            ) or splitted_command[1] == "is":
                 quary = " ".join(splitted_command)
 
                 url = URLCreator(quary)
                 webbrowser.open(url)
-        # Quary: Search about\for ...
-        elif splitted_command[0] == "Search":
+        # Quary: Search\Find about\for ...
+        elif splitted_command[0] == "Search" or splitted_command[0] == " Find":
             if splitted_command[1] == "about" or splitted_command[1] == "for":
                 quary = ""
                 # Create right quary
@@ -201,20 +224,63 @@ def CommandAnalysis(command):
 
             OpenProgram(app_name)
 
+        # Change assistant volume
+        if splitted_command[0] == "Change":
+            volume_rate = None
+            if (
+                splitted_command[1] == "rate"
+                and splitted_command[2] == "of"
+                and splitted_command[3] == "assistant"
+                and splitted_command[4] == "speech"
+                and splitted_command[5] == "to"
+            ):
+                volume_rate = int(splitted_command[6])
+            elif (
+                splitted_command[1] == "the"
+                and splitted_command[2] == "rate"
+                and splitted_command[3] == "of"
+                and splitted_command[4] == "assistant"
+                and splitted_command[5] == "speech"
+                and splitted_command[6] == "to"
+            ):
+                volume_rate = int(splitted_command[7])
+
+            elif (
+                splitted_command[1] == "the"
+                and splitted_command[2] == "assistant"
+                and splitted_command[3] == "speech"
+                and splitted_command[4] == "rate"
+                and splitted_command[5] == "to"
+            ):
+                volume_rate = int(splitted_command[6])
+
+            elif (
+                splitted_command[1] == "assistant"
+                and splitted_command[2] == "rate"
+                and splitted_command[3] == "of"
+                and splitted_command[4] == "speech"
+                and splitted_command[5] == "to"
+            ):
+                volume_rate = int(splitted_command[6])
+
+            if volume_rate is not None:
+                ChangeAssistantVolume(volume_rate)
+
+        # Help menu
         if splitted_command[0] == "Help":
             AssistantSays(strings.help_str)
-    except:
-        pass
+    except Exception as e:
+        print(e)
 
 
 def AssistantSays(text):
-    print(f'{strings.name_of_assistant}: {text}')
+    print(f"{strings.name_of_assistant}: {text}")
     engine.say(text)
     engine.runAndWait()
 
 
 def UserSays(text):
-    print(f'You: {text}')
+    print(f"You: {text}")
 
 
 # Voiceover a command
@@ -243,6 +309,6 @@ def CommandRecognition():
 def Main():
     # AssistantSays(strings.welcome_str)
     # command = CommandRecognition()
-    # command = "Sergey switch language"
-    command = "Open messenger"
+    # command = input()
+    command = "help"
     CommandAnalysis(command)
