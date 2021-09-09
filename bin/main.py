@@ -1,9 +1,15 @@
 import os
+from ctypes import cast, POINTER
+
 import speech_recognition as sr
 import pyttsx3
 import keyboard
 import webbrowser
 import subprocess
+
+from comtypes import CLSCTX_ALL
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+from bin.classes.MasterAudioController import MasterAudioController
 
 import strings
 
@@ -14,6 +20,9 @@ engine = pyttsx3.init()
 engine.setProperty("voice", engine.getProperty("voices")[1].id)
 # Set speed of speech (words per minute)
 engine.setProperty("rate", 150)
+
+
+audio_controller = MasterAudioController()
 
 
 def SwitchKeyboardLanguage():
@@ -153,6 +162,17 @@ def ChangeAssistantVolume(volume_rate):
     engine.setProperty("rate", volume_rate)
 
 
+def ChangeVolume(volume_percents, change=False):
+    if not change:
+        volume_range = audio_controller.GetVolumeRange()
+        min_volume = volume_range[0]
+        max_volume = volume_range[1]
+
+        # audio_controller.SetVolume(decibels_volume)
+    else:
+        pass
+
+
 def CommandAnalysis(command):
     splitted_command = command.split(" ")
 
@@ -224,7 +244,7 @@ def CommandAnalysis(command):
 
             OpenProgram(app_name)
 
-        # Change assistant volume
+        # Change assistant speech rate
         if splitted_command[0] == "Change":
             volume_rate = None
             if (
@@ -265,6 +285,14 @@ def CommandAnalysis(command):
 
             if volume_rate is not None:
                 ChangeAssistantVolume(volume_rate)
+
+        # Change PC volume
+        if splitted_command[0] == "Set":
+            if splitted_command[1] == "volume" and splitted_command[2] == "to":
+                volume_percents = splitted_command[3]
+                ChangeVolume(volume_percents)
+        if splitted_command[0] == "":
+            pass
 
         # Help menu
         if splitted_command[0] == "Help":
@@ -310,5 +338,5 @@ def Main():
     # AssistantSays(strings.welcome_str)
     # command = CommandRecognition()
     # command = input()
-    command = "help"
+    command = "set volume to 20"
     CommandAnalysis(command)
