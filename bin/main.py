@@ -344,5 +344,5 @@ def Main():
     # AssistantSays(strings.welcome_str)
     # command = CommandRecognition()
     # command = input()
-    command = "decrease volume"
+    command = "help me"
     CommandAnalysis(command)
