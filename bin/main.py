@@ -299,6 +299,24 @@ def CommandAnalysis(command):
             if splitted_command[1] == "volume":
                 ChangeVolume("-", True)
 
+        # Shutdown\Restart PC
+        if splitted_command[0] == "Shutdown":
+            if splitted_command[1] == "computer" and len(splitted_command) == 2:
+                os.system("shutdown /s")
+            elif (
+                splitted_command[1] == "computer"
+                and splitted_command[2] == "immediately"
+            ):
+                os.system("shutdown /s /t 0")
+        if splitted_command[0] == "Restart":
+            if splitted_command[1] == "computer" and len(splitted_command) == 2:
+                os.system("shutdown /r")
+            elif (
+                splitted_command[1] == "computer"
+                and splitted_command[2] == "immediately"
+            ):
+                os.system("shutdown /r /t 0")
+
         # Help menu
         if splitted_command[0] == "Help":
             if splitted_command[1] == "me":
