@@ -301,7 +301,8 @@ def CommandAnalysis(command):
 
         # Help menu
         if splitted_command[0] == "Help":
-            AssistantSays(strings.help_str)
+            if splitted_command[1] == "me":
+                AssistantSays(strings.help_str)
     except Exception as e:
         print(e)
 
