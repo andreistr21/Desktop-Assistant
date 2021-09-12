@@ -1,4 +1,5 @@
 import os
+import time
 from ctypes import cast, POINTER
 
 import speech_recognition as sr
@@ -20,7 +21,6 @@ engine = pyttsx3.init()
 engine.setProperty("voice", engine.getProperty("voices")[1].id)
 # Set speed of speech (words per minute)
 engine.setProperty("rate", 150)
-
 
 audio_controller = MasterAudioController()
 
@@ -132,9 +132,8 @@ def PowerShellOutputParsing(string, app_name):
 
 def OpenProgram(app_name):
     app_id = None
-    # noinspection PyBroadException
     try:
-        # Get all installed apps and theirs ID's in PC
+        # Get all installed apps and theirs IDs in PC
         # fmt: off
         app_list = subprocess.run(
             [
@@ -142,15 +141,14 @@ def OpenProgram(app_name):
                 "-Command",
                 "get-StartApps | Where-Object { $_.Name -like '*" + app_name + "*' } | Format-List",
             ],
-            # fmt: on
             capture_output=True,
         ).stdout.decode()
+        # fmt: on
 
         # Return only app id
         app_id = PowerShellOutputParsing(app_list, app_name)
-
     except Exception as e:
-        print(e)
+        pass
 
     # Open the program
     os.system(f"start explorer shell:appsfolder\{app_id}")
@@ -163,14 +161,17 @@ def ChangeAssistantVolume(volume_rate):
 
 
 def ChangeVolume(volume_percents, change=False):
+    # This function will set or change volume level
+    # volume_percents should be in volume range for set and "+" or "-" for increase or decrease
     if not change:
-        volume_range = audio_controller.GetVolumeRange()
-        min_volume = volume_range[0]
-        max_volume = volume_range[1]
-
-        # audio_controller.SetVolume(decibels_volume)
+        audio_controller.SetVolumeScalar(volume_percents)
     else:
-        pass
+        volume = audio_controller.GetMasterVolume()
+        half_volume = volume / 2
+        if volume_percents == "+":
+            audio_controller.SetVolumeScalar(volume * 2, True)
+        elif volume_percents == "-":
+            audio_controller.SetVolumeScalar(volume - half_volume, True)
 
 
 def CommandAnalysis(command):
@@ -290,9 +291,13 @@ def CommandAnalysis(command):
         if splitted_command[0] == "Set":
             if splitted_command[1] == "volume" and splitted_command[2] == "to":
                 volume_percents = splitted_command[3]
-                ChangeVolume(volume_percents)
-        if splitted_command[0] == "":
-            pass
+                ChangeVolume(int(volume_percents))
+        if splitted_command[0] == "Increase":
+            if splitted_command[1] == "volume":
+                ChangeVolume("+", True)
+        if splitted_command[0] == "Decrease":
+            if splitted_command[1] == "volume":
+                ChangeVolume("-", True)
 
         # Help menu
         if splitted_command[0] == "Help":
@@ -338,5 +343,5 @@ def Main():
     # AssistantSays(strings.welcome_str)
     # command = CommandRecognition()
     # command = input()
-    command = "set volume to 20"
+    command = "decrease volume"
     CommandAnalysis(command)

@@ -14,8 +14,16 @@ class MasterAudioController(object):
     def GetVolumeRange(self):
         return self.pc_volume.GetVolumeRange()
 
-    def SetVolume(self, decibels):
+    def SetVolumeScalar(self, percentages, is_decimal=False):
+        if not is_decimal:
+            percentages /= 100
+        self.pc_volume.SetMasterVolumeLevelScalar(percentages, None)
+
+    def ChangeVolume(self, decibels):
         self.pc_volume.SetMasterVolumeLevel(decibels, None)
+
+    def GetMasterVolume(self):
+        return self.pc_volume.GetMasterVolumeLevelScalar()
 
     def DecreaseVolume(self):
         pass
