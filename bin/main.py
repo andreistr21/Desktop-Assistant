@@ -1,18 +1,13 @@
 import os
-import time
-from ctypes import cast, POINTER
-
-import speech_recognition as sr
-import pyttsx3
-import keyboard
-import webbrowser
 import subprocess
+import webbrowser
 
-from comtypes import CLSCTX_ALL
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+import keyboard
+import pyttsx3
+import speech_recognition as sr
+
+from resources import strings
 from bin.classes.MasterAudioController import MasterAudioController
-
-import strings
 
 # Constructs a new TTS engine instance
 engine = pyttsx3.init()
@@ -23,6 +18,9 @@ engine.setProperty("voice", engine.getProperty("voices")[1].id)
 engine.setProperty("rate", 150)
 
 audio_controller = MasterAudioController()
+
+# Pixels for the chat
+pixels_y = [10]
 
 
 def SwitchKeyboardLanguage():
@@ -64,6 +62,7 @@ def ChooseAppFromList(dictionary, app_name):
                 del temp_dict[name]
 
         if len(temp_dict) == 0:
+            # noinspection PyUnusedLocal
             temp_dict = dictionary.copy()
         elif len(temp_dict) == 1:
             return list(temp_dict.values())[0]
@@ -93,7 +92,9 @@ def PowerShellOutputParsing(string, app_name):
     name_pos = -8
     app_id_pos = -8
     while name_pos != -1:
+        # noinspection PyUnusedLocal
         name = ""
+        # noinspection PyUnusedLocal
         app_id = ""
         name_pos = string.find("Name  : ", name_pos + 8)
 
@@ -132,6 +133,7 @@ def PowerShellOutputParsing(string, app_name):
 
 def OpenProgram(app_name):
     app_id = None
+    # noinspection PyBroadException
     try:
         # Get all installed apps and theirs IDs in PC
         # fmt: off
@@ -148,10 +150,10 @@ def OpenProgram(app_name):
         # Return only app id
         app_id = PowerShellOutputParsing(app_list, app_name)
     except Exception as e:
-        pass
+        print(e)
 
     # Open the program
-    os.system(f"start explorer shell:appsfolder\{app_id}")
+    os.system(f"start explorer shell:appsfolder\\{app_id}")
 
     AssistantSays(f'Opening "{app_name}" ...')
 
