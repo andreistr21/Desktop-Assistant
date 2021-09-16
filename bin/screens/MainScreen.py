@@ -1,8 +1,12 @@
 import dearpygui.dearpygui as dpg
 
-from bin.Main import *
+from bin.Main import CommandAnalysis, AssistantSays
 import resources.Strings as strings
 from bin.common import Common as common
+
+
+def CircleHover():
+    print("Clicked!")
 
 
 def main():
@@ -45,7 +49,14 @@ def main():
             on_enter=True,
             callback=CommandAnalysis,
         )
-        dpg.add_image("microphone_id", pos=[375, 670])
+
+        dpg.add_image_button(
+            "microphone_id",
+            width=width,
+            height=height,
+            callback=CircleHover,
+            pos=[370, 665],
+        )
 
     # Chat window
     with dpg.window(

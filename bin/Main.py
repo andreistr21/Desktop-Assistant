@@ -329,16 +329,6 @@ def CommandAnalysis(sender, app_data):
         print(e)
 
 
-# def AssistantSays(text):
-#     print(f"{strings.name_of_assistant}: {text}")
-#     engine.say(text)
-#     engine.runAndWait()
-#
-#
-# def UserSays(text):
-#     print(f"You: {text}")
-
-
 def TextDivisionIntoLines(text):
     max_letters_on_one_line = math.floor(common.one_line_max_pixels_text / 7)
 
