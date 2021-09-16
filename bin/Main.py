@@ -176,6 +176,8 @@ def ChangeVolume(volume_percents, change=False):
 
 
 def CommandAnalysis(sender, app_data):
+    dpg.set_value(sender, "")
+
     command = app_data
     splitted_command = command.split(" ")
 
