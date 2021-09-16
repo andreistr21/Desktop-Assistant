@@ -1,13 +1,15 @@
 import os
 import subprocess
 import webbrowser
-
 import keyboard
 import pyttsx3
 import speech_recognition as sr
+import math
+import dearpygui.dearpygui as dpg
 
-from resources import strings
+from resources import Strings
 from bin.classes.MasterAudioController import MasterAudioController
+from bin.common import Common as common
 
 # Constructs a new TTS engine instance
 engine = pyttsx3.init()
@@ -19,17 +21,14 @@ engine.setProperty("rate", 150)
 
 audio_controller = MasterAudioController()
 
-# Pixels for the chat
-pixels_y = [10]
-
 
 def SwitchKeyboardLanguage():
     # noinspection PyBroadException
     try:
         keyboard.send("shift+alt")
-        AssistantSays("Language is switched")
+        AssistantSays("Language is switched", common.pixels_y)
     except:
-        AssistantSays("Can't changed keyboard language")
+        AssistantSays("Can't changed keyboard language", common.pixels_y)
 
 
 def URLCreator(quary):
@@ -155,7 +154,7 @@ def OpenProgram(app_name):
     # Open the program
     os.system(f"start explorer shell:appsfolder\\{app_id}")
 
-    AssistantSays(f'Opening "{app_name}" ...')
+    AssistantSays(f'Opening "{app_name}" ...', common.pixels_y)
 
 
 def ChangeAssistantVolume(volume_rate):
@@ -176,7 +175,8 @@ def ChangeVolume(volume_percents, change=False):
             audio_controller.SetVolumeScalar(volume - half_volume, True)
 
 
-def CommandAnalysis(command):
+def CommandAnalysis(sender, app_data):
+    command = app_data
     splitted_command = command.split(" ")
 
     # Replace the wrong name
@@ -187,12 +187,12 @@ def CommandAnalysis(command):
 
     # Create the right command for print to user
     command = " ".join(splitted_command)
-    UserSays(command)
+    UserSays(command, common.pixels_y)
 
     # noinspection PyBroadException
     try:
         # Change keyboard language command
-        if splitted_command[0] == strings.name_of_assistant:
+        if splitted_command[0] == Strings.name_of_assistant:
             if splitted_command[1] == "switch" or splitted_command[1] == "change":
                 if (
                     splitted_command[2] == "keyboard"
@@ -322,19 +322,136 @@ def CommandAnalysis(command):
         # Help menu
         if splitted_command[0] == "Help":
             if splitted_command[1] == "me":
-                AssistantSays(strings.help_str)
+                AssistantSays(Strings.help_str, common.pixels_y)
     except Exception as e:
         print(e)
 
 
-def AssistantSays(text):
-    print(f"{strings.name_of_assistant}: {text}")
-    engine.say(text)
-    engine.runAndWait()
+# def AssistantSays(text):
+#     print(f"{strings.name_of_assistant}: {text}")
+#     engine.say(text)
+#     engine.runAndWait()
+#
+#
+# def UserSays(text):
+#     print(f"You: {text}")
 
 
-def UserSays(text):
-    print(f"You: {text}")
+def TextDivisionIntoLines(text):
+    max_letters_on_one_line = math.floor(common.one_line_max_pixels_text / 7)
+
+    counter = 0
+    for i in range(len(text)):
+        if counter == max_letters_on_one_line:
+            text = f"{text[:i]}\n{text[i:]}"
+            counter = 0
+
+        counter += 1
+
+    return text
+
+
+def NewLinesCounter(text):
+    counter = 0
+
+    for letter in text:
+        if letter == "\n":
+            counter += 1
+
+    return counter
+
+
+def AssistantSays(text, pixels):
+    text_len = len(text)
+    text_len_pixels = (
+        text_len * 7
+    )  # 7 pixels for one letter, in one line max 310 pixels
+
+    if text_len_pixels <= common.one_line_max_pixels_text:
+        dpg.add_text(text, parent="Chat_window_id", pos=[15, pixels[0] + 10])
+
+        with dpg.drawlist(
+            width=text_len_pixels + 14,
+            height=30,
+            parent="Chat_window_id",
+            pos=[9, pixels[0] + 6],
+        ):
+            dpg.draw_rectangle(
+                pmin=[0, 0], pmax=[text_len_pixels + 14, 30], rounding=10
+            )
+
+        pixels[0] += 40
+
+    else:
+        number_of_lines = math.ceil(text_len_pixels / common.one_line_max_pixels_text)
+        number_of_lines += NewLinesCounter(text)
+
+        text = TextDivisionIntoLines(text)
+
+        dpg.add_text(text, parent="Chat_window_id", pos=[15, pixels[0] + 10])
+
+        with dpg.drawlist(
+            width=common.one_line_max_pixels_text + 14,
+            height=14 * number_of_lines + 15,
+            parent="Chat_window_id",
+            pos=[9, pixels[0] + 6],
+        ):
+            dpg.draw_rectangle(
+                pmin=[0, 0],
+                pmax=[common.one_line_max_pixels_text + 14, 14 * number_of_lines + 15],
+                rounding=10,
+            )
+
+        pixels[0] += 14 * number_of_lines + 15 + 10
+
+
+def UserSays(text, pixels):
+    text_len = len(text)
+    text_len_pixels = (
+        text_len * 7
+    )  # 7 pixels for one letter, in one line max 310 pixels
+
+    if text_len_pixels <= common.one_line_max_pixels_text:
+        dpg.add_text(
+            text, parent="Chat_window_id", pos=[387 - text_len_pixels, pixels[0] + 10]
+        )
+
+        with dpg.drawlist(
+            width=text_len_pixels + 14,
+            height=30,
+            parent="Chat_window_id",
+            pos=[393 - text_len_pixels - 12, pixels[0] + 6],
+        ):
+            dpg.draw_rectangle(
+                pmin=[0, 0], pmax=[text_len_pixels + 14, 30], rounding=10
+            )
+
+        pixels[0] += 40
+    else:
+        number_of_lines = math.ceil(text_len_pixels / common.one_line_max_pixels_text)
+        number_of_lines += NewLinesCounter(text)
+
+        text = TextDivisionIntoLines(text)
+
+        dpg.add_text(
+            text,
+            parent="Chat_window_id",
+            pos=[387 - common.one_line_max_pixels_text, pixels[0] + 10],
+        )
+
+        with dpg.drawlist(
+            width=common.one_line_max_pixels_text + 14,
+            height=14 * number_of_lines + 15,
+            parent="Chat_window_id",
+            pos=[393 - common.one_line_max_pixels_text - 12, pixels[0] + 6],
+        ):
+            dpg.draw_rectangle(
+                pmin=[0, 0],
+                pmax=[common.one_line_max_pixels_text + 14, 14 * number_of_lines + 15],
+                rounding=10,
+            )
+
+        pixels[0] += 14 * number_of_lines + 15 + 10
 
 
 # Voiceover a command
@@ -349,7 +466,7 @@ def CommandRecognition():
     # Creates a new `Recognizer` instance
     r = sr.Recognizer()
     with sr.Microphone() as source:
-        AssistantSays("Listening...")
+        AssistantSays("Listening...", common.pixels_y)
         # Listening for speech
         audio = r.listen(source)
         # noinspection PyBroadException
@@ -357,12 +474,13 @@ def CommandRecognition():
             command = r.recognize_google(audio)
             return command
         except:
-            AssistantSays("Try Again")
+            AssistantSays("Try Again", common.pixels_y)
 
 
 def Main():
     # AssistantSays(strings.welcome_str)
     # command = CommandRecognition()
     # command = input()
-    command = "help me"
-    CommandAnalysis(command)
+    # command = "help me"
+    # CommandAnalysis(command)
+    pass
