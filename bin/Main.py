@@ -1,5 +1,6 @@
 import os
 import subprocess
+import threading
 import webbrowser
 import keyboard
 import pyttsx3
@@ -10,15 +11,19 @@ import dearpygui.dearpygui as dpg
 from resources import Strings
 from bin.classes.MasterAudioController import MasterAudioController
 from bin.common import Common as common
+from bin.classes.Voice import Voice
 
-# Constructs a new TTS engine instance
-engine = pyttsx3.init()
-# noinspection PyUnresolvedReferences
-# Set voice type
-engine.setProperty("voice", engine.getProperty("voices")[1].id)
-# Set speed of speech (words per minute)
-engine.setProperty("rate", 150)
+# # Constructs a new TTS engine instance
+# engine = pyttsx3.init()
+# # noinspection PyUnresolvedReferences
+# # Set voice type
+# engine.setProperty("voice", engine.getProperty("voices")[1].id)
+# # Set speed of speech (words per minute)
+# engine.setProperty("rate", 150)
+#
+# audio_controller = MasterAudioController()
 
+voice = Voice()
 audio_controller = MasterAudioController()
 
 
@@ -157,8 +162,8 @@ def OpenProgram(app_name):
     AssistantSays(f'Opening "{app_name}" ...', common.pixels_y)
 
 
-def ChangeAssistantVolume(volume_rate):
-    engine.setProperty("rate", volume_rate)
+# def ChangeAssistantVolume(volume_rate):
+#     engine.setProperty("rate", volume_rate)
 
 
 def ChangeVolume(volume_percents, change=False):
@@ -175,10 +180,16 @@ def ChangeVolume(volume_percents, change=False):
             audio_controller.SetVolumeScalar(volume - half_volume, True)
 
 
-def CommandAnalysis(sender, app_data):
-    dpg.set_value(sender, "")
+def CommandAnalysisCall(sender, app_data):
+    CommandAnalysis(sender=sender, app_data=app_data)
 
-    command = app_data
+
+def CommandAnalysis(sender="", app_data="", use_command=False, command=""):
+    if not use_command:
+        dpg.set_value(sender, "")
+
+        command = app_data
+
     splitted_command = command.split(" ")
 
     # Replace the wrong name
@@ -289,7 +300,8 @@ def CommandAnalysis(sender, app_data):
                 volume_rate = int(splitted_command[6])
 
             if volume_rate is not None:
-                ChangeAssistantVolume(volume_rate)
+                voice.ChangeAssistantVolume(volume_rate)
+                AssistantSays("Speech rate is changed", common.pixels_y)
 
         # Change PC volume
         if splitted_command[0] == "Set":
@@ -354,6 +366,8 @@ def NewLinesCounter(text):
 
 
 def AssistantSays(text, pixels):
+    pre_edit_text = text
+
     text_len = len(text)
     text_len_pixels = (
         text_len * 7
@@ -395,6 +409,8 @@ def AssistantSays(text, pixels):
             )
 
         pixels[0] += 14 * number_of_lines + 15 + 10
+
+    voice.Speech(pre_edit_text)
 
 
 def UserSays(text, pixels):
@@ -446,11 +462,18 @@ def UserSays(text, pixels):
         pixels[0] += 14 * number_of_lines + 15 + 10
 
 
-# Voiceover a command
-def Speak(audio):
-    # Adds an utterance to speak to the queue
-    engine.say(audio)
-    engine.runAndWait()
+# def VoiceoverThread(text):
+#     engine.say(text)
+#     engine.runAndWait()
+#
+#
+# # Voiceover a command
+# def Speak(audio):
+#     # Adds an utterance to speak to the queue
+#     engine.say(audio)
+#     engine.runAndWait()
+#     # voiceover = threading.Thread(target=VoiceoverThread, args=(audio,))
+#     # voiceover.start()
 
 
 # Speech recognition
@@ -464,15 +487,15 @@ def CommandRecognition():
         # noinspection PyBroadException
         try:
             command = r.recognize_google(audio)
-            return command
+            CommandAnalysis(use_command=True, command=command)
         except:
             AssistantSays("Try Again", common.pixels_y)
 
-
-def Main():
-    # AssistantSays(strings.welcome_str)
-    # command = CommandRecognition()
-    # command = input()
-    # command = "help me"
-    # CommandAnalysis(command)
-    pass
+#
+# def Main():
+#     # AssistantSays(strings.welcome_str)
+#     # command = CommandRecognition()
+#     # command = input()
+#     # command = "help me"
+#     # CommandAnalysis(command)
+#     pass

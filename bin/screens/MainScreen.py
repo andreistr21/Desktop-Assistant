@@ -1,12 +1,8 @@
 import dearpygui.dearpygui as dpg
 
-from bin.Main import CommandAnalysis, AssistantSays
+from bin.Main import CommandAnalysisCall, AssistantSays, CommandRecognition
 import resources.Strings as strings
 from bin.common import Common as common
-
-
-def CircleHover():
-    print("Clicked!")
 
 
 def main():
@@ -47,14 +43,14 @@ def main():
             width=355,
             hint="Ask Sergey",
             on_enter=True,
-            callback=CommandAnalysis,
+            callback=CommandAnalysisCall,
         )
 
         dpg.add_image_button(
             "microphone_id",
             width=width,
             height=height,
-            callback=CircleHover,
+            callback=CommandRecognition,
             pos=[370, 665],
         )
 
@@ -68,10 +64,13 @@ def main():
         no_resize=True,
         no_title_bar=True,
     ):
-        AssistantSays(strings.welcome_str, common.pixels_y)
+        pass
 
     dpg.set_primary_window("Main_window_id", True)
     dpg.setup_dearpygui(viewport=vp)
 
     dpg.show_viewport(vp)
+    AssistantSays(strings.welcome_str, common.pixels_y)
     dpg.start_dearpygui()
+
+
