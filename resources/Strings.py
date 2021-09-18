@@ -1,5 +1,5 @@
 name_of_assistant = "Sergey"
-welcome_str = "Hi, my name is Sergey and I can help you, just say 'Help me'."
+welcome_str = "Hi, my name is Sergey and I can help you, just say 'Help me'"
 
 help_str = (
     "Hello, my name is Sergey and I am an assistant. I can:\n"

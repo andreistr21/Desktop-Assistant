@@ -1,5 +1,4 @@
 import multiprocessing
-from multiprocessing import Value
 import os
 import subprocess
 import webbrowser
