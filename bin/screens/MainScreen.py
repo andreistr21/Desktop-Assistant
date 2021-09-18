@@ -72,5 +72,3 @@ def main():
     dpg.show_viewport(vp)
     AssistantSays(strings.welcome_str, common.pixels_y)
     dpg.start_dearpygui()
-
-

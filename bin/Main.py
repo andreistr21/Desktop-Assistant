@@ -10,19 +10,8 @@ import dearpygui.dearpygui as dpg
 from resources import Strings
 from bin.classes.MasterAudioController import MasterAudioController
 from bin.common import Common as common
-from bin.classes.Voice import Voice
 
-# # Constructs a new TTS engine instance
-# engine = pyttsx3.init()
-# # noinspection PyUnresolvedReferences
-# # Set voice type
-# engine.setProperty("voice", engine.getProperty("voices")[1].id)
-# # Set speed of speech (words per minute)
-# engine.setProperty("rate", 150)
-#
-# audio_controller = MasterAudioController()
 
-voice = Voice()
 audio_controller = MasterAudioController()
 
 
@@ -161,10 +150,6 @@ def OpenProgram(app_name):
     AssistantSays(f'Opening "{app_name}" ...', common.pixels_y)
 
 
-# def ChangeAssistantVolume(volume_rate):
-#     engine.setProperty("rate", volume_rate)
-
-
 def ChangeVolume(volume_percents, change=False):
     # This function will set or change volume level
     # volume_percents should be in volume range for set and "+" or "-" for increase or decrease
@@ -299,7 +284,7 @@ def CommandAnalysis(sender="", app_data="", use_command=False, command=""):
                 volume_rate = int(splitted_command[6])
 
             if volume_rate is not None:
-                voice.ChangeAssistantVolumeRate(volume_rate)
+                common.voice.ChangeAssistantVolumeRate(volume_rate)
                 AssistantSays("Speech rate is changed", common.pixels_y)
 
         # Change PC volume
@@ -409,7 +394,7 @@ def AssistantSays(text, pixels):
 
         pixels[0] += 14 * number_of_lines + 15 + 10
 
-    # voice.Speech(pre_edit_text)
+    print(f"main voice.temp: {common.voice.temp}")
     process = multiprocessing.Process(target=common.VoiceOver, args=(pre_edit_text,))
     process.start()
 
@@ -463,20 +448,6 @@ def UserSays(text, pixels):
         pixels[0] += 14 * number_of_lines + 15 + 10
 
 
-# def VoiceoverThread(text):
-#     engine.say(text)
-#     engine.runAndWait()
-#
-#
-# # Voiceover a command
-# def Speak(audio):
-#     # Adds an utterance to speak to the queue
-#     engine.say(audio)
-#     engine.runAndWait()
-#     # voiceover = threading.Thread(target=VoiceoverThread, args=(audio,))
-#     # voiceover.start()
-
-
 # Speech recognition
 def CommandRecognition():
     # Creates a new `Recognizer` instance
@@ -491,12 +462,3 @@ def CommandRecognition():
             CommandAnalysis(use_command=True, command=command)
         except:
             AssistantSays("Try Again", common.pixels_y)
-
-#
-# def Main():
-#     # AssistantSays(strings.welcome_str)
-#     # command = CommandRecognition()
-#     # command = input()
-#     # command = "help me"
-#     # CommandAnalysis(command)
-#     pass
