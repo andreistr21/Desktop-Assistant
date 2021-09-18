@@ -1,4 +1,4 @@
-import pyttsx3
+from bin.classes.Voice import Voice
 
 one_line_max_pixels_text = 310
 
@@ -6,4 +6,8 @@ one_line_max_pixels_text = 310
 pixels_y = [10]
 
 
+voice = Voice()
 
+
+def VoiceOver(text):
+    voice.Speech(text)

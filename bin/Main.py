@@ -1,9 +1,8 @@
+import multiprocessing
 import os
 import subprocess
-import threading
 import webbrowser
 import keyboard
-import pyttsx3
 import speech_recognition as sr
 import math
 import dearpygui.dearpygui as dpg
@@ -300,7 +299,7 @@ def CommandAnalysis(sender="", app_data="", use_command=False, command=""):
                 volume_rate = int(splitted_command[6])
 
             if volume_rate is not None:
-                voice.ChangeAssistantVolume(volume_rate)
+                voice.ChangeAssistantVolumeRate(volume_rate)
                 AssistantSays("Speech rate is changed", common.pixels_y)
 
         # Change PC volume
@@ -410,7 +409,9 @@ def AssistantSays(text, pixels):
 
         pixels[0] += 14 * number_of_lines + 15 + 10
 
-    voice.Speech(pre_edit_text)
+    # voice.Speech(pre_edit_text)
+    process = multiprocessing.Process(target=common.VoiceOver, args=(pre_edit_text,))
+    process.start()
 
 
 def UserSays(text, pixels):

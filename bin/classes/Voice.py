@@ -15,6 +15,5 @@ class Voice(object):
         self.engine.say(text)
         self.engine.runAndWait()
 
-    def ChangeAssistantVolume(self, volume_rate):
+    def ChangeAssistantVolumeRate(self, volume_rate):
         self.engine.setProperty("rate", volume_rate)
-
