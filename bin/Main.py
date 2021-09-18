@@ -1,4 +1,5 @@
 import multiprocessing
+from multiprocessing import Value
 import os
 import subprocess
 import webbrowser
@@ -10,9 +11,12 @@ import dearpygui.dearpygui as dpg
 from resources import Strings
 from bin.classes.MasterAudioController import MasterAudioController
 from bin.common import Common as common
+from bin.classes.Voice import Voice
 
 
 audio_controller = MasterAudioController()
+
+assistant_speech_rate = 150
 
 
 def SwitchKeyboardLanguage():
@@ -284,7 +288,8 @@ def CommandAnalysis(sender="", app_data="", use_command=False, command=""):
                 volume_rate = int(splitted_command[6])
 
             if volume_rate is not None:
-                common.voice.ChangeAssistantVolumeRate(volume_rate)
+                global assistant_speech_rate
+                assistant_speech_rate = volume_rate
                 AssistantSays("Speech rate is changed", common.pixels_y)
 
         # Change PC volume
@@ -349,6 +354,11 @@ def NewLinesCounter(text):
     return counter
 
 
+def VoiceOver(text, speech_rate):
+    voice = Voice(speech_rate)
+    voice.Speech(text)
+
+
 def AssistantSays(text, pixels):
     pre_edit_text = text
 
@@ -394,8 +404,9 @@ def AssistantSays(text, pixels):
 
         pixels[0] += 14 * number_of_lines + 15 + 10
 
-    print(f"main voice.temp: {common.voice.temp}")
-    process = multiprocessing.Process(target=common.VoiceOver, args=(pre_edit_text,))
+    process = multiprocessing.Process(
+        target=VoiceOver, args=(pre_edit_text, assistant_speech_rate)
+    )
     process.start()
 
 
