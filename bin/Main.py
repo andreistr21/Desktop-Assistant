@@ -6,6 +6,7 @@ import keyboard
 import speech_recognition as sr
 import math
 import dearpygui.dearpygui as dpg
+from textblob import TextBlob
 
 from resources import Strings
 from bin.classes.MasterAudioController import MasterAudioController
@@ -14,7 +15,6 @@ from bin.classes.Voice import Voice
 
 
 audio_controller = MasterAudioController()
-
 assistant_speech_rate = 150
 
 
@@ -185,8 +185,15 @@ def CommandAnalysis(sender="", app_data="", use_command=False, command=""):
 
     FirstLetterToUpperCase(splitted_command)
 
-    # Create the right command for print to user
+    # Assembling the command in one string
     command = " ".join(splitted_command)
+
+    # Spelling correction
+    text_blob = TextBlob(command)
+    command = text_blob.correct()
+
+    splitted_command = command.split(" ")
+
     UserSays(command, common.pixels_y)
 
     # noinspection PyBroadException

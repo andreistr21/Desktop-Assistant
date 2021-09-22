@@ -7,6 +7,7 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 class MasterAudioController(object):
     def __init__(self):
         devices = AudioUtilities.GetSpeakers()
+        # noinspection PyProtectedMember
         interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
         # noinspection PyTypeChecker
         self.pc_volume = cast(interface, POINTER(IAudioEndpointVolume))
