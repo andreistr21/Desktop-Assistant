@@ -171,11 +171,14 @@ def CommandAnalysisCall(sender, app_data):
     CommandAnalysis(sender=sender, app_data=app_data)
 
 
-def CommandAnalysis(sender="", app_data="", use_command=False, command=""):
-    if not use_command:
+def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
+    # If use_speech True use command variable
+    if not use_speech:
         dpg.set_value(sender, "")
 
         command = app_data
+        # Focus text input item
+        dpg.focus_item("Text_input_id")
 
     splitted_command = command.split(" ")
 
@@ -331,7 +334,12 @@ def CommandAnalysis(sender="", app_data="", use_command=False, command=""):
         # Help menu
         if splitted_command[0] == "Help":
             if splitted_command[1] == "me":
-                AssistantSays(Strings.help_str, common.pixels_y, Strings.help_str_for_voice_over, another_text_for_voice_over=True)
+                AssistantSays(
+                    Strings.help_str,
+                    common.pixels_y,
+                    Strings.help_str_for_voice_over,
+                    another_text_for_voice_over=True,
+                )
     except Exception as e:
         print(e)
 
@@ -479,6 +487,6 @@ def CommandRecognition():
         # noinspection PyBroadException
         try:
             command = r.recognize_google(audio)
-            CommandAnalysis(use_command=True, command=command)
+            CommandAnalysis(use_speech=True, command=command)
         except:
             AssistantSays("Try Again", common.pixels_y)

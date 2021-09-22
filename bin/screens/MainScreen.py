@@ -38,7 +38,7 @@ def main():
     # Main window
     with dpg.window(id="Main_window_id"):
         dpg.add_input_text(
-            id="Text input",
+            id="Text_input_id",
             pos=[10, 680],
             width=355,
             hint="Ask Sergey",
