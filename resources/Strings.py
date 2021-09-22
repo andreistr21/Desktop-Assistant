@@ -10,3 +10,13 @@ help_str = (
     "   * Change volume (example: 'Set volume to 50' or 'Increase volume')\n"
     "   * Shutdown or restart PC (example: 'Shutdown/restart computer' or 'Shutdown/restart computer immediately')\n"
 )
+
+help_str_for_voice_over = (
+    "Hello, my name is Sergey and I am an assistant. I can:\n"
+    "   Change your keyboard language\n"
+    "   Search in your web browser\n"
+    "   Open program by the name\n"
+    "   Change the assistant speech rate\n"
+    "   Change volume\n"
+    "   Shutdown or restart PC\n"
+)

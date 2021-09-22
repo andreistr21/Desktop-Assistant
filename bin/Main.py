@@ -331,7 +331,7 @@ def CommandAnalysis(sender="", app_data="", use_command=False, command=""):
         # Help menu
         if splitted_command[0] == "Help":
             if splitted_command[1] == "me":
-                AssistantSays(Strings.help_str, common.pixels_y)
+                AssistantSays(Strings.help_str, common.pixels_y, Strings.help_str_for_voice_over, another_text_for_voice_over=True)
     except Exception as e:
         print(e)
 
@@ -365,7 +365,7 @@ def VoiceOver(text, speech_rate):
     voice.Speech(text)
 
 
-def AssistantSays(text, pixels):
+def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=False):
     pre_edit_text = text
 
     text_len = len(text)
@@ -410,8 +410,11 @@ def AssistantSays(text, pixels):
 
         pixels[0] += 14 * number_of_lines + 15 + 10
 
+    if not another_text_for_voice_over:
+        voice_over_text = pre_edit_text
+
     process = multiprocessing.Process(
-        target=VoiceOver, args=(pre_edit_text, assistant_speech_rate)
+        target=VoiceOver, args=(voice_over_text, assistant_speech_rate)
     )
     process.start()
 
