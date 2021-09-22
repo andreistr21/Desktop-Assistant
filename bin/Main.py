@@ -160,11 +160,25 @@ def ChangeVolume(volume_percents, change=False):
         audio_controller.SetVolumeScalar(volume_percents)
     else:
         volume = audio_controller.GetMasterVolume()
-        half_volume = volume / 2
+        # half_volume = volume / 2
+
         if volume_percents == "+":
-            audio_controller.SetVolumeScalar(volume * 2, True)
+            # Volume cannot be more than 1
+            if volume + 0.2 > 1:
+                audio_controller.SetVolumeScalar(1, True)
+            else:
+                audio_controller.SetVolumeScalar(volume + 0.2, True)
+
+            AssistantSays("Volume increased", common.pixels_y)
         elif volume_percents == "-":
-            audio_controller.SetVolumeScalar(volume - half_volume, True)
+            # Volume cannot be less than 0
+            if volume - 0.2 < 0:
+                audio_controller.SetVolumeScalar(0, True)
+            else:
+                audio_controller.SetVolumeScalar(volume - 0.2, True)
+
+            AssistantSays("Volume decreased", common.pixels_y)
+
 
 
 def CommandAnalysisCall(sender, app_data):
