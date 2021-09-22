@@ -16,6 +16,7 @@ from bin.classes.Voice import Voice
 
 audio_controller = MasterAudioController()
 assistant_speech_rate = 150
+process = None
 
 
 def SwitchKeyboardLanguage():
@@ -160,7 +161,6 @@ def ChangeVolume(volume_percents, change=False):
         audio_controller.SetVolumeScalar(volume_percents)
     else:
         volume = audio_controller.GetMasterVolume()
-        # half_volume = volume / 2
 
         if volume_percents == "+":
             # Volume cannot be more than 1
@@ -178,7 +178,6 @@ def ChangeVolume(volume_percents, change=False):
                 audio_controller.SetVolumeScalar(volume - 0.2, True)
 
             AssistantSays("Volume decreased", common.pixels_y)
-
 
 
 def CommandAnalysisCall(sender, app_data):
@@ -388,6 +387,8 @@ def VoiceOver(text, speech_rate):
 
 
 def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=False):
+    global process
+
     pre_edit_text = text
 
     text_len = len(text)
@@ -490,17 +491,33 @@ def UserSays(text, pixels):
         pixels[0] += 14 * number_of_lines + 15 + 10
 
 
+def IsNowVoiceover():
+    global process
+
+    # noinspection PyUnresolvedReferences
+    if process.is_alive():
+        return True
+    else:
+        return False
+
+
 # Speech recognition
 def CommandRecognition():
-    # Creates a new `Recognizer` instance
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        AssistantSays("Listening...", common.pixels_y)
-        # Listening for speech
-        audio = r.listen(source)
-        # noinspection PyBroadException
-        try:
-            command = r.recognize_google(audio)
-            CommandAnalysis(use_speech=True, command=command)
-        except:
-            AssistantSays("Try Again", common.pixels_y)
+    global process
+
+    if IsNowVoiceover():
+        # noinspection PyUnresolvedReferences
+        process.terminate()
+    else:
+        # Creates a new `Recognizer` instance
+        r = sr.Recognizer()
+        with sr.Microphone() as source:
+            AssistantSays("Listening...", common.pixels_y)
+            # Listening for speech
+            audio = r.listen(source)
+            # noinspection PyBroadException
+            try:
+                command = r.recognize_google(audio)
+                CommandAnalysis(use_speech=True, command=command)
+            except:
+                AssistantSays("Try Again", common.pixels_y)
