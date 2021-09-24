@@ -360,6 +360,44 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 def TextDivisionIntoLines(text):
     max_letters_on_one_line = math.floor(common.one_line_max_pixels_text / 7)
 
+    words_in_line_counter = 0
+    word_start = 0
+    # max_width = 0
+    letter_index = 0
+    new_lines_counter = 0
+
+    # Create new line if there is max number of letters
+    while letter_index < len(text):
+        if words_in_line_counter == max_letters_on_one_line:
+            if text[letter_index] != " ":
+                if text[letter_index - 1] != " " or text[letter_index + 1] != " ":
+                    # Search for start of word
+                    for j in range(letter_index, 0, -1):
+                        if text[j] != " ":
+                            word_start = j
+                        elif text[j] == " ":
+                            break
+
+            if word_start != 0:
+                letter_index = word_start
+                word_start = 0
+            text = f"{text[:letter_index]}\n{text[letter_index:]}"
+            new_lines_counter += 1
+            words_in_line_counter = 0
+
+        if text[letter_index] == "\n":
+            words_in_line_counter = 0
+        else:
+            words_in_line_counter += 1
+
+        letter_index += 1
+
+    return text, new_lines_counter
+
+
+def OldTextDivisionIntoLines(text):
+    max_letters_on_one_line = math.floor(common.one_line_max_pixels_text / 7)
+
     counter = 0
     for i in range(len(text)):
         if counter == max_letters_on_one_line:
@@ -412,10 +450,14 @@ def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=
         pixels[0] += 40
 
     else:
-        number_of_lines = math.ceil(text_len_pixels / common.one_line_max_pixels_text)
-        number_of_lines += NewLinesCounter(text)
 
-        text = TextDivisionIntoLines(text)
+        number_of_lines = NewLinesCounter(text)
+        print(number_of_lines)
+
+        text, lines_to_add = TextDivisionIntoLines(text)
+
+        number_of_lines += lines_to_add + 1
+        print(number_of_lines)
 
         dpg.add_text(text, parent="Chat_window_id", pos=[15, pixels[0] + 10])
 
@@ -468,7 +510,9 @@ def UserSays(text, pixels):
         number_of_lines = math.ceil(text_len_pixels / common.one_line_max_pixels_text)
         number_of_lines += NewLinesCounter(text)
 
-        text = TextDivisionIntoLines(text)
+        text, lines_to_add = TextDivisionIntoLines(text)
+
+        number_of_lines += lines_to_add
 
         dpg.add_text(
             text,
