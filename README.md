@@ -1,6 +1,6 @@
 # Desktop-Assistant
 
-##### Description:
+#### Description:
 This is a simple desktop assistant with GUI that will allow you control your PC by voice or text (you can read about all features in app by writing "Help me").
 
 #### Usage:
