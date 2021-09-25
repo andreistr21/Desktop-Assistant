@@ -11,7 +11,7 @@ from textblob import TextBlob
 from resources import Strings
 from bin.classes.MasterAudioController import MasterAudioController
 from bin.common import Common as common
-from bin.classes.Voice import Voice
+from bin.VoiceoverCallback import VoiceOver
 
 
 audio_controller = MasterAudioController()
@@ -418,9 +418,9 @@ def NewLinesCounter(text):
     return counter
 
 
-def VoiceOver(text, speech_rate):
-    voice = Voice(speech_rate)
-    voice.Speech(text)
+# def VoiceOver(text, speech_rate):
+#     voice = Voice(speech_rate)
+#     voice.Speech(text)
 
 
 def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=False):
@@ -475,6 +475,7 @@ def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=
     if not another_text_for_voice_over:
         voice_over_text = pre_edit_text
 
+    # Start voiceover in background
     process = multiprocessing.Process(
         target=VoiceOver, args=(voice_over_text, assistant_speech_rate)
     )
