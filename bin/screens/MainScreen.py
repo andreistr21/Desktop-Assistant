@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 
-from bin.Main import CommandAnalysisCall, AssistantSays, CommandRecognition
+from bin.Main import CommandAnalysisCall, AssistantSays, CommandRecognition, TerminateVoiceover
 import resources.Strings as strings
 from bin.common import Common as common
 
@@ -74,3 +74,5 @@ def main():
     dpg.show_viewport(vp)
     AssistantSays(strings.welcome_str, common.pixels_y)
     dpg.start_dearpygui()
+    # Terminate voiceover if exist
+    TerminateVoiceover()

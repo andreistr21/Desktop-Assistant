@@ -49,7 +49,6 @@ def FirstLetterToUpperCase(list_of_words):
 
 
 def ChooseAppFromList(dictionary, app_name):
-    # print(dictionary)
     temp_dict = dictionary.copy()
     if 1 < len(dictionary) < 4:
         # Delete app if this is web site
@@ -452,12 +451,10 @@ def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=
     else:
 
         number_of_lines = NewLinesCounter(text)
-        print(number_of_lines)
 
         text, lines_to_add = TextDivisionIntoLines(text)
 
         number_of_lines += lines_to_add + 1
-        print(number_of_lines)
 
         dpg.add_text(text, parent="Chat_window_id", pos=[15, pixels[0] + 10])
 
@@ -533,6 +530,15 @@ def UserSays(text, pixels):
             )
 
         pixels[0] += 14 * number_of_lines + 15 + 10
+
+
+def TerminateVoiceover():
+    global process
+
+    # noinspection PyUnresolvedReferences
+    if process.is_alive():
+        # noinspection PyUnresolvedReferences
+        process.terminate()
 
 
 def IsNowVoiceover():
