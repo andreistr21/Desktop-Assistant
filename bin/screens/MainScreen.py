@@ -7,6 +7,8 @@ from bin.common import Common as common
 
 def main():
     vp = dpg.create_viewport(title="Sergey", width=430, height=750)
+    dpg.set_viewport_small_icon("resources/images/icon_small.ico")
+    dpg.set_viewport_large_icon("resources/images/icon_large.ico")
 
     width, height, channels, data = dpg.load_image("resources/images/microphone.png")
 
