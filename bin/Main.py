@@ -428,6 +428,15 @@ def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=
 
     pre_edit_text = text
 
+    if not another_text_for_voice_over:
+        voice_over_text = pre_edit_text
+
+    # Start voiceover in background
+    process = multiprocessing.Process(
+        target=VoiceOver, args=(voice_over_text, assistant_speech_rate)
+    )
+    process.start()
+
     text_len = len(text)
     text_len_pixels = (
         text_len * 7
@@ -471,15 +480,6 @@ def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=
             )
 
         pixels[0] += 14 * number_of_lines + 15 + 10
-
-    if not another_text_for_voice_over:
-        voice_over_text = pre_edit_text
-
-    # Start voiceover in background
-    process = multiprocessing.Process(
-        target=VoiceOver, args=(voice_over_text, assistant_speech_rate)
-    )
-    process.start()
 
 
 def UserSays(text, pixels):
