@@ -464,6 +464,10 @@ def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=
 
         pixels[0] += 14 * number_of_lines + 15 + 10
 
+    dpg.render_dearpygui_frame()
+    # Scroll to the bottom of the window
+    dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
+
 
 def UserSays(text, pixels):
     text_len = len(text)
@@ -514,6 +518,10 @@ def UserSays(text, pixels):
             )
 
         pixels[0] += 14 * number_of_lines + 15 + 10
+
+    dpg.render_dearpygui_frame()
+    # Scroll to the bottom of the window
+    dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
 
 
 def TerminateVoiceover():
