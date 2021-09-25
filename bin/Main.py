@@ -1,6 +1,6 @@
-import multiprocessing
 import os
 import subprocess
+import threading
 import webbrowser
 import keyboard
 import speech_recognition as sr
@@ -438,10 +438,8 @@ def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=
         voice_over_text = pre_edit_text
 
     # Start voiceover in background
-    process = multiprocessing.Process(
-        target=VoiceOver, args=(voice_over_text, assistant_speech_rate)
-    )
-    process.start()
+    thread = threading.Thread(target=VoiceOver, args=(voice_over_text, assistant_speech_rate,))
+    thread.start()
 
     text_len = len(text)
     text_len_pixels = (
