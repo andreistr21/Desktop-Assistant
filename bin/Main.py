@@ -396,20 +396,6 @@ def TextDivisionIntoLines(text):
     return text, new_lines_counter
 
 
-def OldTextDivisionIntoLines(text):
-    max_letters_on_one_line = math.floor(common.one_line_max_pixels_text / 7)
-
-    counter = 0
-    for i in range(len(text)):
-        if counter == max_letters_on_one_line:
-            text = f"{text[:i]}\n{text[i:]}"
-            counter = 0
-
-        counter += 1
-
-    return text
-
-
 def NewLinesCounter(text):
     counter = 0
 
@@ -418,11 +404,6 @@ def NewLinesCounter(text):
             counter += 1
 
     return counter
-
-
-# def VoiceOver(text, speech_rate):
-#     voice = Voice(speech_rate)
-#     voice.Speech(text)
 
 
 def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=False):
@@ -544,21 +525,12 @@ def TerminateVoiceover():
         process.terminate()
 
 
-def IsNowVoiceover():
-    global process
-
-    # noinspection PyUnresolvedReferences
-    if process.is_alive():
-        return True
-    else:
-        return False
-
-
 # Speech recognition
 def CommandRecognition():
     global process
 
-    if IsNowVoiceover():
+    # noinspection PyUnresolvedReferences
+    if process.is_alive():
         # noinspection PyUnresolvedReferences
         process.terminate()
     else:

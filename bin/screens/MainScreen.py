@@ -1,6 +1,11 @@
 import dearpygui.dearpygui as dpg
 
-from bin.Main import CommandAnalysisCall, AssistantSays, CommandRecognition, TerminateVoiceover
+from bin.Main import (
+    CommandAnalysisCall,
+    AssistantSays,
+    CommandRecognition,
+    TerminateVoiceover,
+)
 import resources.Strings as strings
 from bin.common import Common as common
 
