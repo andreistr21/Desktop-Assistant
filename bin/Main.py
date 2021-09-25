@@ -211,6 +211,8 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 
     UserSays(command, common.pixels_y)
 
+    is_done = False
+
     # noinspection PyBroadException
     try:
         # Change keyboard language command
@@ -221,10 +223,11 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                     and splitted_command[3] == "language"
                 ) or splitted_command[2] == "language":
                     SwitchKeyboardLanguage()
+                    is_done = True
 
         # Search in the Internet
         # Quary: What\who is (it) ...
-        elif splitted_command[0] == "What" or splitted_command[0] == "Who":
+        if splitted_command[0] == "What" or splitted_command[0] == "Who":
             if (
                 splitted_command[1] == "is" and splitted_command[2] == "it"
             ) or splitted_command[1] == "is":
@@ -232,6 +235,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 
                 url = URLCreator(quary)
                 webbrowser.open(url)
+                is_done = True
         # Quary: Search\Find about\for ...
         elif splitted_command[0] == "Search" or splitted_command[0] == " Find":
             if splitted_command[1] == "about" or splitted_command[1] == "for":
@@ -245,6 +249,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 
                 url = URLCreator(quary)
                 webbrowser.open(url)
+                is_done = True
             # Quary: Search ...
             else:
                 quary = ""
@@ -257,9 +262,10 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 
                 url = URLCreator(quary)
                 webbrowser.open(url)
+                is_done = True
 
         # Open programs
-        elif splitted_command[0] == "Open":
+        if splitted_command[0] == "Open":
             app_name = ""
             for i in range(1, len(splitted_command)):
                 app_name += splitted_command[i]
@@ -268,9 +274,10 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                     app_name += " "
 
             OpenProgram(app_name)
+            is_done = True
 
         # Change assistant speech rate
-        elif splitted_command[0] == "Change":
+        if splitted_command[0] == "Change":
             volume_rate = None
             if (
                 splitted_command[1] == "rate"
@@ -312,39 +319,47 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                 global assistant_speech_rate
                 assistant_speech_rate = volume_rate
                 AssistantSays("Speech rate is changed.", common.pixels_y)
+                is_done = True
 
         # Change PC volume
-        elif splitted_command[0] == "Set":
+        if splitted_command[0] == "Set":
             if splitted_command[1] == "volume" and splitted_command[2] == "to":
                 volume_percents = splitted_command[3]
                 ChangeVolume(int(volume_percents))
+                is_done = True
         elif splitted_command[0] == "Increase":
             if splitted_command[1] == "volume":
                 ChangeVolume("+", True)
+                is_done = True
         elif splitted_command[0] == "Decrease":
             if splitted_command[1] == "volume":
                 ChangeVolume("-", True)
+                is_done = True
 
         # Shutdown\Restart PC
-        elif splitted_command[0] == "Shutdown":
+        if splitted_command[0] == "Shutdown":
             if splitted_command[1] == "computer" and len(splitted_command) == 2:
                 os.system("shutdown /s")
+                is_done = True
             elif (
                 splitted_command[1] == "computer"
                 and splitted_command[2] == "immediately"
             ):
                 os.system("shutdown /s /t 0")
+                is_done = True
         elif splitted_command[0] == "Restart":
             if splitted_command[1] == "computer" and len(splitted_command) == 2:
                 os.system("shutdown /r")
+                is_done = True
             elif (
                 splitted_command[1] == "computer"
                 and splitted_command[2] == "immediately"
             ):
                 os.system("shutdown /r /t 0")
+                is_done = True
 
         # Help menu
-        elif splitted_command[0] == "Help":
+        if splitted_command[0] == "Help":
             if splitted_command[1] == "me":
                 AssistantSays(
                     Strings.help_str,
@@ -352,7 +367,8 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                     Strings.help_str_for_voice_over,
                     another_text_for_voice_over=True,
                 )
-        else:
+                is_done = True
+        if not is_done:
             AssistantSays("Sorry, I don't understand.", common.pixels_y)
     except Exception as e:
         print(e)
