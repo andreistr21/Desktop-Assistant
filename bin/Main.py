@@ -180,6 +180,13 @@ def ChangeVolume(volume_percents, change=False):
 
 
 def CommandAnalysisCall(sender, app_data):
+    global process
+
+    # noinspection PyUnresolvedReferences
+    if process.is_alive():
+        # noinspection PyUnresolvedReferences
+        process.terminate()
+
     CommandAnalysis(sender=sender, app_data=app_data)
 
 
