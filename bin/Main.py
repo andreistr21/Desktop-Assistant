@@ -1,12 +1,11 @@
-import multiprocessing
-import os
-import subprocess
-import webbrowser
-import keyboard
+from multiprocessing import Process
+from os import system
+from subprocess import run
+from webbrowser import open
+from keyboard import send
 import speech_recognition as sr
-import math
+from math import floor, ceil
 import dearpygui.dearpygui as dpg
-from textblob import TextBlob
 
 from resources import Strings
 from bin.classes.MasterAudioController import MasterAudioController
@@ -22,7 +21,7 @@ process = None
 def SwitchKeyboardLanguage():
     # noinspection PyBroadException
     try:
-        keyboard.send("shift+alt")
+        send("shift+alt")
         AssistantSays("Language is switched.", common.pixels_y)
     except:
         AssistantSays("Can't changed keyboard language.", common.pixels_y)
@@ -132,7 +131,7 @@ def OpenProgram(app_name):
     try:
         # Get all installed apps and theirs IDs in PC
         # fmt: off
-        app_list = subprocess.run(
+        app_list = run(
             [
                 "powershell",
                 "-Command",
@@ -148,7 +147,7 @@ def OpenProgram(app_name):
         print(e)
 
     # Open the program
-    os.system(f"start explorer shell:appsfolder\\{app_id}")
+    system(f"start explorer shell:appsfolder\\{app_id}")
 
     AssistantSays(f'Opening "{app_name}" ...', common.pixels_y)
 
@@ -237,7 +236,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                 quary = " ".join(splitted_command)
 
                 url = URLCreator(quary)
-                webbrowser.open(url)
+                open(url)
                 is_done = True
         # Quary: Search\Find about\for ...
         elif splitted_command[0] == "Search" or splitted_command[0] == " Find":
@@ -251,7 +250,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                         quary += " "
 
                 url = URLCreator(quary)
-                webbrowser.open(url)
+                open(url)
                 is_done = True
             # Quary: Search ...
             else:
@@ -264,7 +263,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                         quary += " "
 
                 url = URLCreator(quary)
-                webbrowser.open(url)
+                open(url)
                 is_done = True
 
         # Open programs
@@ -342,23 +341,23 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
         # Shutdown\Restart PC
         if splitted_command[0] == "Shutdown":
             if splitted_command[1] == "computer" and len(splitted_command) == 2:
-                os.system("shutdown /s")
+                system("shutdown /s")
                 is_done = True
             elif (
                 splitted_command[1] == "computer"
                 and splitted_command[2] == "immediately"
             ):
-                os.system("shutdown /s /t 0")
+                system("shutdown /s /t 0")
                 is_done = True
         elif splitted_command[0] == "Restart":
             if splitted_command[1] == "computer" and len(splitted_command) == 2:
-                os.system("shutdown /r")
+                system("shutdown /r")
                 is_done = True
             elif (
                 splitted_command[1] == "computer"
                 and splitted_command[2] == "immediately"
             ):
-                os.system("shutdown /r /t 0")
+                system("shutdown /r /t 0")
                 is_done = True
 
         # Help menu
@@ -378,7 +377,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 
 
 def TextDivisionIntoLines(text):
-    max_letters_on_one_line = math.floor(common.one_line_max_pixels_text / 7)
+    max_letters_on_one_line = floor(common.one_line_max_pixels_text / 7)
 
     words_in_line_counter = 0
     word_start = 0
@@ -434,7 +433,7 @@ def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=
         voice_over_text = pre_edit_text
 
     # Start voiceover in background
-    process = multiprocessing.Process(
+    process = Process(
         target=VoiceOver, args=(voice_over_text, assistant_speech_rate)
     )
     process.start()
@@ -511,7 +510,7 @@ def UserSays(text, pixels):
 
         pixels[0] += 40
     else:
-        number_of_lines = math.ceil(text_len_pixels / common.one_line_max_pixels_text)
+        number_of_lines = ceil(text_len_pixels / common.one_line_max_pixels_text)
         number_of_lines += NewLinesCounter(text)
 
         text, lines_to_add = TextDivisionIntoLines(text)

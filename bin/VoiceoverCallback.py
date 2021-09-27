@@ -1,5 +1,3 @@
-import pythoncom
-
 from bin.classes.Voice import Voice
 
 
