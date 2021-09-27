@@ -210,10 +210,6 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
     # Assembling the command in one string
     command = " ".join(splitted_command)
 
-    # # Spelling correction
-    # text_blob = TextBlob(command)
-    # command = text_blob.correct()
-
     splitted_command = command.split(" ")
 
     UserSays(command, common.pixels_y)
