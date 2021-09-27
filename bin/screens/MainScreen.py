@@ -1,4 +1,6 @@
 import dearpygui.dearpygui as dpg
+from multiprocessing import freeze_support
+
 
 from bin.Main import (
     CommandAnalysisCall,
@@ -11,6 +13,8 @@ from bin.common import Common as common
 
 
 def main():
+    freeze_support()
+
     vp = dpg.create_viewport(title="Sergey", width=430, height=750)
     dpg.set_viewport_small_icon("resources/images/icon_small.ico")
     dpg.set_viewport_large_icon("resources/images/icon_large.ico")

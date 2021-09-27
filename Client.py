@@ -1,4 +1,3 @@
-# import bin.main
 import bin.screens.MainScreen
 
 

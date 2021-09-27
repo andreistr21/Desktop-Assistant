@@ -1,6 +1,6 @@
+import multiprocessing
 import os
 import subprocess
-import threading
 import webbrowser
 import keyboard
 import speech_recognition as sr
@@ -183,7 +183,7 @@ def CommandAnalysisCall(sender, app_data):
     global process
 
     # noinspection PyUnresolvedReferences
-    if process.is_alive():
+    if process is not None and process.is_alive():
         # noinspection PyUnresolvedReferences
         process.terminate()
 
@@ -210,9 +210,9 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
     # Assembling the command in one string
     command = " ".join(splitted_command)
 
-    # Spelling correction
-    text_blob = TextBlob(command)
-    command = text_blob.correct()
+    # # Spelling correction
+    # text_blob = TextBlob(command)
+    # command = text_blob.correct()
 
     splitted_command = command.split(" ")
 
@@ -438,8 +438,10 @@ def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=
         voice_over_text = pre_edit_text
 
     # Start voiceover in background
-    thread = threading.Thread(target=VoiceOver, args=(voice_over_text, assistant_speech_rate,))
-    thread.start()
+    process = multiprocessing.Process(
+        target=VoiceOver, args=(voice_over_text, assistant_speech_rate)
+    )
+    process.start()
 
     text_len = len(text)
     text_len_pixels = (
@@ -549,7 +551,7 @@ def TerminateVoiceover():
     global process
 
     # noinspection PyUnresolvedReferences
-    if process.is_alive():
+    if process is not None and process.is_alive():
         # noinspection PyUnresolvedReferences
         process.terminate()
 
@@ -559,7 +561,7 @@ def CommandRecognition():
     global process
 
     # noinspection PyUnresolvedReferences
-    if process.is_alive():
+    if process is not None and process.is_alive():
         # noinspection PyUnresolvedReferences
         process.terminate()
     else:
