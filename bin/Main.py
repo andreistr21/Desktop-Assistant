@@ -146,10 +146,13 @@ def OpenProgram(app_name):
     except Exception as e:
         print(e)
 
-    # Open the program
-    system(f"start explorer shell:appsfolder\\{app_id}")
+    if app_id is not None:
+        # Open the program
+        system(f"start explorer shell:appsfolder\\{app_id}")
 
-    AssistantSays(f'Opening "{app_name}" ...', common.pixels_y)
+        AssistantSays(f'Opening "{app_name}" ...', common.pixels_y)
+    else:
+        AssistantSays("No apps found with this name", common.pixels_y)
 
 
 def ChangeVolume(volume_percents, change=False):
@@ -433,9 +436,7 @@ def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=
         voice_over_text = pre_edit_text
 
     # Start voiceover in background
-    process = Process(
-        target=VoiceOver, args=(voice_over_text, assistant_speech_rate)
-    )
+    process = Process(target=VoiceOver, args=(voice_over_text, assistant_speech_rate))
     process.start()
 
     text_len = len(text)
