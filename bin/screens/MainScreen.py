@@ -7,9 +7,52 @@ from bin.Main import (
     AssistantSays,
     CommandRecognition,
     TerminateVoiceover,
+    ViewportResize,
 )
 import resources.Strings as strings
 from bin.common import Common as common
+
+
+def GUICreator(
+    chat_window_width,
+    chat_window_height,
+    input_text_width,
+    input_text_pos,
+    image_btn_pos,
+    image_width,
+    image_height,
+):
+    # Main window
+    with dpg.window(id="Main_window_id"):
+        dpg.add_input_text(
+            id="Text_input_id",
+            pos=input_text_pos,
+            width=input_text_width,
+            hint="Ask Sergey",
+            on_enter=True,
+            callback=CommandAnalysisCall,
+        )
+
+        dpg.add_image_button(
+            "microphone_image_id",
+            id="microphone_btn_id",
+            width=image_width,
+            height=image_height,
+            callback=CommandRecognition,
+            pos=image_btn_pos,
+        )
+
+    # Chat window
+    with dpg.window(
+        id="Chat_window_id",
+        no_move=True,
+        width=chat_window_width,
+        height=chat_window_height,
+        no_collapse=True,
+        no_resize=True,
+        no_title_bar=True,
+    ):
+        pass
 
 
 def main():
@@ -19,7 +62,9 @@ def main():
     dpg.set_viewport_small_icon("resources/images/icon_small.ico")
     dpg.set_viewport_large_icon("resources/images/icon_large.ico")
 
-    width, height, channels, data = dpg.load_image("resources/images/microphone.png")
+    image_width, image_height, channels, data = dpg.load_image(
+        "resources/images/microphone.png"
+    )
 
     # Create a theme
     with dpg.theme(default_theme=True):
@@ -44,41 +89,16 @@ def main():
 
     # Add an image
     with dpg.texture_registry():
-        dpg.add_static_texture(width, height, data, id="microphone_id")
-
-    # Main window
-    with dpg.window(id="Main_window_id"):
-        dpg.add_input_text(
-            id="Text_input_id",
-            pos=[10, 680],
-            width=355,
-            hint="Ask Sergey",
-            on_enter=True,
-            callback=CommandAnalysisCall,
+        dpg.add_static_texture(
+            image_width, image_height, data, id="microphone_image_id"
         )
 
-        dpg.add_image_button(
-            "microphone_id",
-            width=width,
-            height=height,
-            callback=CommandRecognition,
-            pos=[370, 665],
-        )
-
-    # Chat window
-    with dpg.window(
-        id="Chat_window_id",
-        no_move=True,
-        width=412,
-        height=600,
-        no_collapse=True,
-        no_resize=True,
-        no_title_bar=True,
-    ):
-        pass
+    GUICreator(412, 650, 355, [10, 680], [370, 665], image_width, image_height)
 
     dpg.set_primary_window("Main_window_id", True)
     dpg.setup_dearpygui(viewport=vp)
+
+    dpg.set_viewport_resize_callback(ViewportResize)
 
     dpg.show_viewport(vp)
     AssistantSays(strings.welcome_str, common.pixels_y)

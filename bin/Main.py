@@ -17,6 +17,71 @@ audio_controller = MasterAudioController()
 assistant_speech_rate = 150
 process = None
 
+all_replicas = []
+
+one_line_max_pixels_text = 310
+text_x_pos = 387
+
+
+def GUIChanger(
+    chat_window_width,
+    chat_window_height,
+    input_text_pos,
+    input_text_width,
+    image_btn_pos,
+):
+    dpg.set_item_width("Chat_window_id", chat_window_width)
+    dpg.set_item_height("Chat_window_id", chat_window_height)
+
+    dpg.set_item_pos("Text_input_id", input_text_pos)
+    dpg.set_item_width("Text_input_id", input_text_width)
+
+    dpg.set_item_pos("microphone_btn_id", image_btn_pos)
+
+
+def ViewportResize():
+    global one_line_max_pixels_text
+    global text_x_pos
+
+    viewport_height = dpg.get_viewport_height()
+    viewport_width = dpg.get_viewport_width()
+
+    chat_window_height = viewport_height - 100
+    chat_window_width = viewport_width - 18
+    input_text_width = viewport_width - 75
+    input_text_pos = [10, viewport_height - 70]
+    one_line_max_pixels_text = viewport_width - 120
+    image_btn_pos = [viewport_width - 60, viewport_height - 85]
+    text_x_pos = viewport_width - 43
+
+    GUIChanger(
+        chat_window_width,
+        chat_window_height,
+        input_text_pos,
+        input_text_width,
+        image_btn_pos,
+    )
+
+    dpg.delete_item("Chat_window_id", children_only=True)
+    common.pixels_y = [10]
+
+    for item in all_replicas:
+        if item[0] == "Assistant":
+            AssistantSays(
+                item[1],
+                common.pixels_y,
+                voiceover=False,
+                logs=False,
+                auto_scroll_to_bottom=False,
+            )
+        elif item[0] == "User":
+            UserSays(item[1], common.pixels_y, logs=False, auto_scroll_to_bottom=False)
+
+    # Scroll to the bottom
+    dpg.render_dearpygui_frame()
+    # Scroll to the bottom of the window
+    dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
+
 
 def SwitchKeyboardLanguage():
     # noinspection PyBroadException
@@ -373,14 +438,24 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                     another_text_for_voice_over=True,
                 )
                 is_done = True
+
+        if splitted_command[0] == "Test":
+            test()
         if not is_done:
             AssistantSays("Sorry, I don't understand.", common.pixels_y)
     except Exception as e:
         print(e)
 
 
+def test():
+    print(dpg.get_viewport_height())
+    print(dpg.get_viewport_width())
+
+
 def TextDivisionIntoLines(text):
-    max_letters_on_one_line = floor(common.one_line_max_pixels_text / 7)
+    global one_line_max_pixels_text
+
+    max_letters_on_one_line = floor(one_line_max_pixels_text / 7)
 
     words_in_line_counter = 0
     word_start = 0
@@ -427,24 +502,38 @@ def NewLinesCounter(text):
     return counter
 
 
-def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=False):
+def AssistantSays(
+    text,
+    pixels,
+    voice_over_text="",
+    another_text_for_voice_over=False,
+    voiceover=True,
+    logs=True,
+    auto_scroll_to_bottom=True,
+):
     global process
+    global one_line_max_pixels_text
 
     pre_edit_text = text
+    if logs:
+        all_replicas.append(["Assistant", text])
 
     if not another_text_for_voice_over:
         voice_over_text = pre_edit_text
 
-    # Start voiceover in background
-    process = Process(target=VoiceOver, args=(voice_over_text, assistant_speech_rate))
-    process.start()
+    if voiceover:
+        # Start voiceover in background
+        process = Process(
+            target=VoiceOver, args=(voice_over_text, assistant_speech_rate)
+        )
+        process.start()
 
     text_len = len(text)
     text_len_pixels = (
         text_len * 7
     )  # 7 pixels for one letter, in one line max 310 pixels
 
-    if text_len_pixels <= common.one_line_max_pixels_text:
+    if text_len_pixels <= one_line_max_pixels_text:
         dpg.add_text(text, parent="Chat_window_id", pos=[15, pixels[0] + 10])
 
         with dpg.drawlist(
@@ -470,40 +559,49 @@ def AssistantSays(text, pixels, voice_over_text="", another_text_for_voice_over=
         dpg.add_text(text, parent="Chat_window_id", pos=[15, pixels[0] + 10])
 
         with dpg.drawlist(
-            width=common.one_line_max_pixels_text + 14,
+            width=one_line_max_pixels_text + 14,
             height=14 * number_of_lines + 15,
             parent="Chat_window_id",
             pos=[9, pixels[0] + 6],
         ):
             dpg.draw_rectangle(
                 pmin=[0, 0],
-                pmax=[common.one_line_max_pixels_text + 14, 14 * number_of_lines + 15],
+                pmax=[one_line_max_pixels_text + 14, 14 * number_of_lines + 15],
                 rounding=10,
             )
 
         pixels[0] += 14 * number_of_lines + 15 + 10
 
-    dpg.render_dearpygui_frame()
-    # Scroll to the bottom of the window
-    dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
+    if auto_scroll_to_bottom:
+        dpg.render_dearpygui_frame()
+        # Scroll to the bottom of the window
+        dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
 
 
-def UserSays(text, pixels):
+def UserSays(text, pixels, logs=True, auto_scroll_to_bottom=True):
+    global one_line_max_pixels_text
+    global text_x_pos
+
+    if logs:
+        all_replicas.append(["User", text])
+
     text_len = len(text)
     text_len_pixels = (
         text_len * 7
     )  # 7 pixels for one letter, in one line max 310 pixels
 
-    if text_len_pixels <= common.one_line_max_pixels_text:
+    if text_len_pixels <= one_line_max_pixels_text:
         dpg.add_text(
-            text, parent="Chat_window_id", pos=[387 - text_len_pixels, pixels[0] + 10]
+            text,
+            parent="Chat_window_id",
+            pos=[text_x_pos - text_len_pixels, pixels[0] + 10],
         )
 
         with dpg.drawlist(
             width=text_len_pixels + 14,
             height=30,
             parent="Chat_window_id",
-            pos=[393 - text_len_pixels - 12, pixels[0] + 6],
+            pos=[text_x_pos + 6 - text_len_pixels - 12, pixels[0] + 6],
         ):
             dpg.draw_rectangle(
                 pmin=[0, 0], pmax=[text_len_pixels + 14, 30], rounding=10
@@ -511,7 +609,7 @@ def UserSays(text, pixels):
 
         pixels[0] += 40
     else:
-        number_of_lines = ceil(text_len_pixels / common.one_line_max_pixels_text)
+        number_of_lines = ceil(text_len_pixels / one_line_max_pixels_text)
         number_of_lines += NewLinesCounter(text)
 
         text, lines_to_add = TextDivisionIntoLines(text)
@@ -521,26 +619,27 @@ def UserSays(text, pixels):
         dpg.add_text(
             text,
             parent="Chat_window_id",
-            pos=[387 - common.one_line_max_pixels_text, pixels[0] + 10],
+            pos=[text_x_pos - one_line_max_pixels_text, pixels[0] + 10],
         )
 
         with dpg.drawlist(
-            width=common.one_line_max_pixels_text + 14,
+            width=one_line_max_pixels_text + 14,
             height=14 * number_of_lines + 15,
             parent="Chat_window_id",
-            pos=[393 - common.one_line_max_pixels_text - 12, pixels[0] + 6],
+            pos=[text_x_pos + 6 - one_line_max_pixels_text - 12, pixels[0] + 6],
         ):
             dpg.draw_rectangle(
                 pmin=[0, 0],
-                pmax=[common.one_line_max_pixels_text + 14, 14 * number_of_lines + 15],
+                pmax=[one_line_max_pixels_text + 14, 14 * number_of_lines + 15],
                 rounding=10,
             )
 
         pixels[0] += 14 * number_of_lines + 15 + 10
 
-    dpg.render_dearpygui_frame()
-    # Scroll to the bottom of the window
-    dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
+    if auto_scroll_to_bottom:
+        dpg.render_dearpygui_frame()
+        # Scroll to the bottom of the window
+        dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
 
 
 def TerminateVoiceover():
