@@ -77,8 +77,6 @@ def ViewportResize():
         elif item[0] == "User":
             UserSays(item[1], common.pixels_y, logs=False, auto_scroll_to_bottom=False)
 
-    # Scroll to the bottom
-    dpg.render_dearpygui_frame()
     # Scroll to the bottom of the window
     dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
 
@@ -459,7 +457,6 @@ def TextDivisionIntoLines(text):
 
     words_in_line_counter = 0
     word_start = 0
-    # max_width = 0
     letter_index = 0
     new_lines_counter = 0
 
