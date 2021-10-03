@@ -19,8 +19,8 @@ This is a simple desktop assistant with GUI that will allow you control your PC 
 
 ## Using:
 ##### If you want, you can download installer or executable file
-* Installer: https://e.pcloud.link/publink/show?code=XZYtb5Zx3cgcSvAYbbhJmGciut6LzT819zy
-* Executable file: https://e.pcloud.link/publink/show?code=XZmtb5ZIscOvGM23IbTeAMva1pI6QsVg4K7
+* Installer: https://e.pcloud.link/publink/show?code=XZQ2B5Z1PF8ek78454wk5Drj4OnbL5enFtk
+* Executable file: https://e.pcloud.link/publink/show?code=XZ42B5Z1f2QcR3AYMFQXKGUA5PXRSDiR2Cy
 
 
 ## License
