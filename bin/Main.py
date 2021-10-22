@@ -6,6 +6,8 @@ from keyboard import send
 import speech_recognition as sr
 from math import floor, ceil
 import dearpygui.dearpygui as dpg
+from urllib.request import Request, urlopen
+from bs4 import BeautifulSoup
 
 from resources import Strings
 from bin.classes.MasterAudioController import MasterAudioController
@@ -90,12 +92,13 @@ def SwitchKeyboardLanguage():
         AssistantSays("Can't changed keyboard language.", common.pixels_y)
 
 
-def URLCreator(quary):
+def QuaryCreator(quary):
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36'}
     temp = "https://www.google.com/search?q="
     quary = quary.replace(" ", "+")
-    url = f"{temp}{quary}"
+    url = f"{temp}{quary}&hl=en"
 
-    return url
+    return url, headers
 
 
 def FirstLetterToUpperCase(list_of_words):
@@ -255,6 +258,23 @@ def CommandAnalysisCall(sender, app_data):
     CommandAnalysis(sender=sender, app_data=app_data)
 
 
+def SearchInTheInternet(quary):
+    url, headers = QuaryCreator(quary)
+    request = Request(url, headers=headers)
+    response = urlopen(request)
+
+    soup = BeautifulSoup(response, 'html.parser')
+    if soup.find(class_="hgKElc"):
+        print(soup.find(class_="hgKElc").text)
+        AssistantSays(soup.find(class_="hgKElc").text, common.pixels_y)
+    elif soup.find(class_="kno-rdesc"):
+        print(soup.find(class_="kno-rdesc").text[11:-10])
+        AssistantSays(soup.find(class_="kno-rdesc").text[11:-10], common.pixels_y)
+    else:
+        AssistantSays("Opening in a browser...", common.pixels_y)
+        open(url)
+
+
 def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
     # If use_speech True use command variable
     if not use_speech:
@@ -301,11 +321,10 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
             ) or splitted_command[1] == "is":
                 quary = " ".join(splitted_command)
 
-                url = URLCreator(quary)
-                open(url)
+                SearchInTheInternet(quary)
                 is_done = True
         # Quary: Search\Find about\for ...
-        elif splitted_command[0] == "Search" or splitted_command[0] == " Find":
+        elif splitted_command[0] == "Search" or splitted_command[0] == "Find":
             if splitted_command[1] == "about" or splitted_command[1] == "for":
                 quary = ""
                 # Create right quary
@@ -315,8 +334,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                     if i != len(splitted_command) - 1:
                         quary += " "
 
-                url = URLCreator(quary)
-                open(url)
+                SearchInTheInternet(quary)
                 is_done = True
             # Quary: Search ...
             else:
@@ -328,8 +346,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                     if i != len(splitted_command) - 1:
                         quary += " "
 
-                url = URLCreator(quary)
-                open(url)
+                SearchInTheInternet(quary)
                 is_done = True
 
         # Open programs
