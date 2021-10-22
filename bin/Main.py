@@ -32,6 +32,7 @@ def GUIChanger(
     input_text_width,
     image_btn_pos,
 ):
+    """Change resolution of each GUI element in the window."""
     dpg.set_item_width("Chat_window_id", chat_window_width)
     dpg.set_item_height("Chat_window_id", chat_window_height)
 
@@ -42,6 +43,7 @@ def GUIChanger(
 
 
 def ViewportResize():
+    """Window resize handler. Restores dialog."""
     global one_line_max_pixels_text
     global text_x_pos
 
@@ -78,12 +80,15 @@ def ViewportResize():
             )
         elif item[0] == "User":
             UserSays(item[1], common.pixels_y, logs=False, auto_scroll_to_bottom=False)
+        elif item[0] == "Button":
+            ButtonCreate(item[1], logs=False)
 
     # Scroll to the bottom of the window
     dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
 
 
 def SwitchKeyboardLanguage():
+    """Change keyboard language"""
     # noinspection PyBroadException
     try:
         send("shift+alt")
@@ -92,8 +97,16 @@ def SwitchKeyboardLanguage():
         AssistantSays("Can't changed keyboard language.", common.pixels_y)
 
 
-def QuaryCreator(quary):
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36'}
+def QuaryCreator(quary: str) -> tuple:
+    """Create suitable request
+    Args:
+        quary (String):
+    Returns:
+        tuple(str, str)
+    """
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36"
+    }
     temp = "https://www.google.com/search?q="
     quary = quary.replace(" ", "+")
     url = f"{temp}{quary}&hl=en"
@@ -258,18 +271,63 @@ def CommandAnalysisCall(sender, app_data):
     CommandAnalysis(sender=sender, app_data=app_data)
 
 
+def OpenInABrowserButtonClicked(_, __, url):
+    open(url)
+    TerminateVoiceover()
+
+
+def ButtonCreate(
+    url: str,
+    logs=True,
+):
+    """Create button under the text
+    Args:
+        url (str):
+        logs (bool): if True, remembers the button as created (new)
+        """
+    global one_line_max_pixels_text
+
+    print("hey")
+
+    dpg.add_button(
+        label="Open in a browser",
+        width=one_line_max_pixels_text + 14,
+        height=25,
+        parent="Chat_window_id",
+        callback=OpenInABrowserButtonClicked,
+        user_data=url,
+        pos=[9, common.pixels_y[0] + 6],
+    )
+
+    common.pixels_y[0] += 35
+
+    if logs:
+        all_replicas.append(["Button", url])
+
+        # Update interface (render one frame)
+        dpg.render_dearpygui_frame()
+        # Scroll to the bottom of the window
+        dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
+
+
 def SearchInTheInternet(quary):
+    """Internet search for a given query
+    Args:
+        quary (String)
+    Returns:
+        None
+    """
     url, headers = QuaryCreator(quary)
     request = Request(url, headers=headers)
     response = urlopen(request)
 
-    soup = BeautifulSoup(response, 'html.parser')
+    soup = BeautifulSoup(response, "html.parser")
     if soup.find(class_="hgKElc"):
-        print(soup.find(class_="hgKElc").text)
         AssistantSays(soup.find(class_="hgKElc").text, common.pixels_y)
+        ButtonCreate(url)
     elif soup.find(class_="kno-rdesc"):
-        print(soup.find(class_="kno-rdesc").text[11:-10])
         AssistantSays(soup.find(class_="kno-rdesc").text[11:-10], common.pixels_y)
+        ButtonCreate(url)
     else:
         AssistantSays("Opening in a browser...", common.pixels_y)
         open(url)
