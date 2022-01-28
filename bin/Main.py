@@ -104,7 +104,7 @@ def SwitchKeyboardLanguage():
     try:
         send("shift+alt")
         AssistantSays("Language is switched.", common.pixels_y)
-    except Exception as e:
+    except Exception as _:
         AssistantSays("Can't changed keyboard language.", common.pixels_y)
 
 
@@ -629,7 +629,9 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 
                 is_done = KillProgram(app_name)
                 if not is_done:
-                    AssistantSays("I can't find an open app with that name.", common.pixels_y)
+                    AssistantSays(
+                        "I can't find an open app with that name.", common.pixels_y
+                    )
 
         if not is_done:
             AssistantSays("Sorry, I don't understand.", common.pixels_y)
@@ -1017,5 +1019,5 @@ def CommandRecognition():
             try:
                 command = r.recognize_google(audio)
                 CommandAnalysis(use_speech=True, command=command)
-            except:
+            except Exception as _:
                 AssistantSays("Try Again.", common.pixels_y)
