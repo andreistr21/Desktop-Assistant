@@ -619,6 +619,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 
                 OpenProgram(app_name)
                 is_done = True
+            # Close programs
             elif not is_done and splitted_command[0] == "Close":
                 app_name = ""
                 for i in range(1, len(splitted_command)):
