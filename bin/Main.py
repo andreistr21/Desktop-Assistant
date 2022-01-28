@@ -8,11 +8,18 @@ from math import floor, ceil
 import dearpygui.dearpygui as dpg
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
+from spacy import load
 
 from resources import Strings
 from bin.classes.MasterAudioController import MasterAudioController
 from bin.common import Common as common
 from bin.VoiceoverCallback import VoiceOver
+from bin.CommandAnalyser import GetActionAndObject
+
+import time
+
+
+nlp = load("en_core_web_trf")
 
 
 audio_controller = MasterAudioController()
@@ -284,10 +291,8 @@ def ButtonCreate(
     Args:
         url (str):
         logs (bool): if True, remembers the button as created (new)
-        """
+    """
     global one_line_max_pixels_text
-
-    print("hey")
 
     dpg.add_button(
         label="Open in a browser",
@@ -334,6 +339,8 @@ def SearchInTheInternet(quary):
 
 
 def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
+    global assistant_speech_rate
+
     # If use_speech True use command variable
     if not use_speech:
         dpg.set_value(sender, "")
@@ -355,155 +362,93 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 
     splitted_command = command.split(" ")
 
+    # Add "." at the end of the string if necessary
+    if command[-1] != ".":
+        command = "".join([command, "."])
+
+    is_imperative, action, obj, doc = GetActionAndObject(nlp, command)
+
     UserSays(command, common.pixels_y)
 
     is_done = False
 
     # noinspection PyBroadException
     try:
-        # Change keyboard language command
-        if splitted_command[0] == Strings.name_of_assistant:
-            if splitted_command[1] == "switch" or splitted_command[1] == "change":
-                if (
-                    splitted_command[2] == "keyboard"
-                    and splitted_command[3] == "language"
-                ) or splitted_command[2] == "language":
-                    SwitchKeyboardLanguage()
+        if is_imperative:
+            # Change keyboard language command
+            if (
+                action == "Switch" or action == "Change"
+            ) and obj == "keyboard language":
+                SwitchKeyboardLanguage()
+                is_done = True
+
+            # Quary: Search\Find about\for ...
+            elif action == "Search" or action == "Find":
+                SearchInTheInternet(obj)
+                is_done = True
+
+            # Open programs
+            elif action == "Open":
+                OpenProgram(obj)
+                is_done = True
+
+            # Change assistant speech rate
+            elif action == "Change" and obj == "the assistant speech rate":
+                volume_rate = None
+                for token in doc:
+                    if token.pos_ == "NUM":
+                        volume_rate = int(token.text)
+
+                if volume_rate is not None:
+                    global assistant_speech_rate
+                    assistant_speech_rate = volume_rate
+                    AssistantSays("Speech rate is changed.", common.pixels_y)
                     is_done = True
 
-        # Search in the Internet
-        # Quary: What\who is (it) ...
-        if splitted_command[0] == "What" or splitted_command[0] == "Who":
-            if (
-                splitted_command[1] == "is" and splitted_command[2] == "it"
-            ) or splitted_command[1] == "is":
-                quary = " ".join(splitted_command)
+            # Change PC volume
+            if action == "Set" and obj == "volume":
+                volume_percents = None
+                for token in doc:
+                    if token.pos_ == "NUM":
+                        volume_percents = int(token.text)
 
-                SearchInTheInternet(quary)
-                is_done = True
-        # Quary: Search\Find about\for ...
-        elif splitted_command[0] == "Search" or splitted_command[0] == "Find":
-            if splitted_command[1] == "about" or splitted_command[1] == "for":
-                quary = ""
-                # Create right quary
-                for i in range(2, len(splitted_command)):
-                    quary += splitted_command[i]
-                    # Add space between words
-                    if i != len(splitted_command) - 1:
-                        quary += " "
-
-                SearchInTheInternet(quary)
-                is_done = True
-            # Quary: Search ...
-            else:
-                quary = ""
-                # Create right quary
-                for i in range(1, len(splitted_command)):
-                    quary += splitted_command[i]
-                    # Add spaces between words
-                    if i != len(splitted_command) - 1:
-                        quary += " "
-
-                SearchInTheInternet(quary)
-                is_done = True
-
-        # Open programs
-        if splitted_command[0] == "Open":
-            app_name = ""
-            for i in range(1, len(splitted_command)):
-                app_name += splitted_command[i]
-                # Add spaces between words
-                if i != len(splitted_command) - 1:
-                    app_name += " "
-
-            OpenProgram(app_name)
-            is_done = True
-
-        # Change assistant speech rate
-        if splitted_command[0] == "Change":
-            volume_rate = None
-            if (
-                splitted_command[1] == "rate"
-                and splitted_command[2] == "of"
-                and splitted_command[3] == "assistant"
-                and splitted_command[4] == "speech"
-                and splitted_command[5] == "to"
-            ):
-                volume_rate = int(splitted_command[6])
-            elif (
-                splitted_command[1] == "the"
-                and splitted_command[2] == "rate"
-                and splitted_command[3] == "of"
-                and splitted_command[4] == "assistant"
-                and splitted_command[5] == "speech"
-                and splitted_command[6] == "to"
-            ):
-                volume_rate = int(splitted_command[7])
-
-            elif (
-                splitted_command[1] == "the"
-                and splitted_command[2] == "assistant"
-                and splitted_command[3] == "speech"
-                and splitted_command[4] == "rate"
-                and splitted_command[5] == "to"
-            ):
-                volume_rate = int(splitted_command[6])
-
-            elif (
-                splitted_command[1] == "assistant"
-                and splitted_command[2] == "rate"
-                and splitted_command[3] == "of"
-                and splitted_command[4] == "speech"
-                and splitted_command[5] == "to"
-            ):
-                volume_rate = int(splitted_command[6])
-
-            if volume_rate is not None:
-                global assistant_speech_rate
-                assistant_speech_rate = volume_rate
-                AssistantSays("Speech rate is changed.", common.pixels_y)
-                is_done = True
-
-        # Change PC volume
-        if splitted_command[0] == "Set":
-            if splitted_command[1] == "volume" and splitted_command[2] == "to":
-                volume_percents = splitted_command[3]
-                ChangeVolume(int(volume_percents))
-                is_done = True
-        elif splitted_command[0] == "Increase":
-            if splitted_command[1] == "volume":
+                if volume_percents is not None:
+                    ChangeVolume(int(volume_percents))
+                    is_done = True
+            elif action == "Increase" and obj == "volume":
                 ChangeVolume("+", True)
                 is_done = True
-        elif splitted_command[0] == "Decrease":
-            if splitted_command[1] == "volume":
+            elif action == "Decrease" and obj == "volume":
                 ChangeVolume("-", True)
                 is_done = True
 
-        # Shutdown\Restart PC
-        if splitted_command[0] == "Shutdown":
-            if splitted_command[1] == "computer" and len(splitted_command) == 2:
-                system("shutdown /s")
-                is_done = True
-            elif (
-                splitted_command[1] == "computer"
-                and splitted_command[2] == "immediately"
-            ):
-                system("shutdown /s /t 0")
-                is_done = True
-        elif splitted_command[0] == "Restart":
-            if splitted_command[1] == "computer" and len(splitted_command) == 2:
-                system("shutdown /r")
-                is_done = True
-            elif (
-                splitted_command[1] == "computer"
-                and splitted_command[2] == "immediately"
-            ):
-                system("shutdown /r /t 0")
-                is_done = True
+            # Shutdown\Restart PC
+            elif action == "Shutdown":
+                adv = None
+                for token in doc:
+                    if token.pos_ == "ADV":
+                        adv = token.text
 
-        # Help menu
-        if splitted_command[0] == "Help":
-            if splitted_command[1] == "me":
+                if obj == "computer" and adv is None:
+                    pass
+                elif obj == "computer" and adv == "immediately":
+                    system("shutdown /s /t 0")
+                    is_done = True
+            elif action == "Restart":
+                adv = None
+                for token in doc:
+                    if token.pos_ == "ADV":
+                        adv = token.text
+
+                if obj == "computer" and adv is None:
+                    system("shutdown /r")
+                    is_done = True
+                elif obj == "computer" and adv == "immediately":
+                    system("shutdown /r /t 0")
+                    is_done = True
+
+            # Help menu
+            elif action == "Help" and obj == "me":
                 AssistantSays(
                     Strings.help_str,
                     common.pixels_y,
@@ -512,10 +457,193 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                 )
                 is_done = True
 
-        if splitted_command[0] == "Test":
-            test()
+        # Cases of non-recognition of the imperative mood
+        else:
+            # Search in the Internet
+            # Quary: What\who is (it) ...
+            if splitted_command[0] == "What" or splitted_command[0] == "Who":
+                if (
+                        splitted_command[1] == "is" and splitted_command[2] == "it"
+                ) or splitted_command[1] == "is":
+                    quary = " ".join(splitted_command)
+
+                    SearchInTheInternet(quary)
+                    is_done = True
+            # Shutdown PC
+            elif splitted_command[0] == "Shutdown":
+                if splitted_command[1] == "computer" and len(splitted_command) == 2:
+                    system("shutdown /s")
+                    is_done = True
+
+            # Open programs
+            elif not is_done and splitted_command[0] == "Open":
+                app_name = ""
+                for i in range(1, len(splitted_command)):
+                    app_name += splitted_command[i]
+                    # Add spaces between words
+                    if i != len(splitted_command) - 1:
+                        app_name += " "
+
+                OpenProgram(app_name)
+                is_done = True
+
         if not is_done:
             AssistantSays("Sorry, I don't understand.", common.pixels_y)
+
+        # # +++++++++++ Change keyboard language command
+        # if splitted_command[0] == Strings.name_of_assistant:
+        #     if splitted_command[1] == "switch" or splitted_command[1] == "change":
+        #         if (
+        #             splitted_command[2] == "keyboard"
+        #             and splitted_command[3] == "language"
+        #         ) or splitted_command[2] == "language":
+        #             SwitchKeyboardLanguage()
+        #             is_done = True
+        #
+        # # Search in the Internet
+        # # ++++++++++++ Quary: What\who is (it) ...
+        # if splitted_command[0] == "What" or splitted_command[0] == "Who":
+        #     if (
+        #         splitted_command[1] == "is" and splitted_command[2] == "it"
+        #     ) or splitted_command[1] == "is":
+        #         quary = " ".join(splitted_command)
+        #
+        #         SearchInTheInternet(quary)
+        #         is_done = True
+        # # ++++++++++ Quary: Search\Find about\for ...
+        # elif splitted_command[0] == "Search" or splitted_command[0] == "Find":
+        #     if splitted_command[1] == "about" or splitted_command[1] == "for":
+        #         quary = ""
+        #         # Create right quary
+        #         for i in range(2, len(splitted_command)):
+        #             quary += splitted_command[i]
+        #             # Add space between words
+        #             if i != len(splitted_command) - 1:
+        #                 quary += " "
+        #
+        #         SearchInTheInternet(quary)
+        #         is_done = True
+        #     # Quary: Search ...
+        #     else:
+        #         quary = ""
+        #         # Create right quary
+        #         for i in range(1, len(splitted_command)):
+        #             quary += splitted_command[i]
+        #             # Add spaces between words
+        #             if i != len(splitted_command) - 1:
+        #                 quary += " "
+        #
+        #         SearchInTheInternet(quary)
+        #         is_done = True
+        #
+        # # +++++++++++++ Open programs
+        # if splitted_command[0] == "Open":
+        #     app_name = ""
+        #     for i in range(1, len(splitted_command)):
+        #         app_name += splitted_command[i]
+        #         # Add spaces between words
+        #         if i != len(splitted_command) - 1:
+        #             app_name += " "
+        #
+        #     OpenProgram(app_name)
+        #     is_done = True
+        #
+        # # ++++++++++++ Change assistant speech rate
+        # if splitted_command[0] == "Change":
+        #     volume_rate = None
+        #     if (
+        #         splitted_command[1] == "rate"
+        #         and splitted_command[2] == "of"
+        #         and splitted_command[3] == "assistant"
+        #         and splitted_command[4] == "speech"
+        #         and splitted_command[5] == "to"
+        #     ):
+        #         volume_rate = int(splitted_command[6])
+        #     elif (
+        #         splitted_command[1] == "the"
+        #         and splitted_command[2] == "rate"
+        #         and splitted_command[3] == "of"
+        #         and splitted_command[4] == "assistant"
+        #         and splitted_command[5] == "speech"
+        #         and splitted_command[6] == "to"
+        #     ):
+        #         volume_rate = int(splitted_command[7])
+        #
+        #     elif (
+        #         splitted_command[1] == "the"
+        #         and splitted_command[2] == "assistant"
+        #         and splitted_command[3] == "speech"
+        #         and splitted_command[4] == "rate"
+        #         and splitted_command[5] == "to"
+        #     ):
+        #         volume_rate = int(splitted_command[6])
+        #
+        #     elif (
+        #         splitted_command[1] == "assistant"
+        #         and splitted_command[2] == "rate"
+        #         and splitted_command[3] == "of"
+        #         and splitted_command[4] == "speech"
+        #         and splitted_command[5] == "to"
+        #     ):
+        #         volume_rate = int(splitted_command[6])
+        #
+        #     if volume_rate is not None:
+        #         assistant_speech_rate = volume_rate
+        #         AssistantSays("Speech rate is changed.", common.pixels_y)
+        #         is_done = True
+        #
+        # # +++++++++++ Change PC volume
+        # if splitted_command[0] == "Set":
+        #     if splitted_command[1] == "volume" and splitted_command[2] == "to":
+        #         volume_percents = splitted_command[3]
+        #         ChangeVolume(int(volume_percents))
+        #         is_done = True
+        # elif splitted_command[0] == "Increase":
+        #     if splitted_command[1] == "volume":
+        #         ChangeVolume("+", True)
+        #         is_done = True
+        # elif splitted_command[0] == "Decrease":
+        #     if splitted_command[1] == "volume":
+        #         ChangeVolume("-", True)
+        #         is_done = True
+        #
+        # # +++++++++++ Shutdown\Restart PC
+        # if splitted_command[0] == "Shutdown":
+        #     if splitted_command[1] == "computer" and len(splitted_command) == 2:
+        #         system("shutdown /s")
+        #         is_done = True
+        #     elif (
+        #         splitted_command[1] == "computer"
+        #         and splitted_command[2] == "immediately"
+        #     ):
+        #         system("shutdown /s /t 0")
+        #         is_done = True
+        # elif splitted_command[0] == "Restart":
+        #     if splitted_command[1] == "computer" and len(splitted_command) == 2:
+        #         system("shutdown /r")
+        #         is_done = True
+        #     elif (
+        #         splitted_command[1] == "computer"
+        #         and splitted_command[2] == "immediately"
+        #     ):
+        #         system("shutdown /r /t 0")
+        #         is_done = True
+        #
+        # # +++++++++++ Help menu
+        # if splitted_command[0] == "Help":
+        #     if splitted_command[1] == "me":
+        #         AssistantSays(
+        #             Strings.help_str,
+        #             common.pixels_y,
+        #             Strings.help_str_for_voice_over,
+        #             another_text_for_voice_over=True,
+        #         )
+        #         is_done = True
+        #
+        # if splitted_command[0] == "Test":
+        #     test()
+        # if not is_done:
+        #     AssistantSays("Sorry, I don't understand.", common.pixels_y)
     except Exception as e:
         print(e)
 
@@ -594,9 +722,12 @@ def AssistantSays(
         voice_over_text = pre_edit_text
 
     if voiceover:
+
+        start_time = time.time()
+
         # Start voiceover in background
         process = Process(
-            target=VoiceOver, args=(voice_over_text, assistant_speech_rate)
+            target=VoiceOver, args=(voice_over_text, assistant_speech_rate, start_time)
         )
         process.start()
 

@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 from multiprocessing import freeze_support
-
+from spacy import load
 
 from bin.Main import (
     CommandAnalysisCall,
@@ -11,6 +11,8 @@ from bin.Main import (
 )
 import resources.Strings as strings
 from bin.common import Common as common
+
+nlp = load("en_core_web_trf")
 
 
 def GUICreator(
