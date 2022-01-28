@@ -12,7 +12,7 @@ from bin.Main import (
 import resources.Strings as strings
 from bin.common import Common as common
 
-nlp = load("en_core_web_trf")
+# nlp = load("en_core_web_trf")
 
 
 def GUICreator(

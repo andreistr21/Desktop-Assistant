@@ -1,5 +1,5 @@
 from multiprocessing import Process
-from os import system
+from os import system, popen
 from subprocess import run
 from webbrowser import open
 from keyboard import send
@@ -9,6 +9,7 @@ import dearpygui.dearpygui as dpg
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 from spacy import load
+from regex import findall, IGNORECASE
 
 from resources import Strings
 from bin.classes.MasterAudioController import MasterAudioController
@@ -40,6 +41,7 @@ def GUIChanger(
     image_btn_pos,
 ):
     """Change resolution of each GUI element in the window."""
+
     dpg.set_item_width("Chat_window_id", chat_window_width)
     dpg.set_item_height("Chat_window_id", chat_window_height)
 
@@ -51,6 +53,7 @@ def GUIChanger(
 
 def ViewportResize():
     """Window resize handler. Restores dialog."""
+
     global one_line_max_pixels_text
     global text_x_pos
 
@@ -96,11 +99,12 @@ def ViewportResize():
 
 def SwitchKeyboardLanguage():
     """Change keyboard language"""
+
     # noinspection PyBroadException
     try:
         send("shift+alt")
         AssistantSays("Language is switched.", common.pixels_y)
-    except:
+    except Exception as e:
         AssistantSays("Can't changed keyboard language.", common.pixels_y)
 
 
@@ -111,6 +115,7 @@ def QuaryCreator(quary: str) -> tuple:
     Returns:
         tuple(str, str)
     """
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36"
     }
@@ -166,8 +171,9 @@ def ChooseAppFromList(dictionary, app_name):
         return list(dictionary.values())[0]
 
 
-# Parsing output of powershell to dictionary
 def PowerShellOutputParsing(string, app_name):
+    """Parsing output of powershell to dictionary"""
+
     apps_dictionary = {}
     name_pos = -8
     app_id_pos = -8
@@ -338,6 +344,128 @@ def SearchInTheInternet(quary):
         open(url)
 
 
+def GetActualProgramName(name: str):
+    """
+    Get actual program name from all opened programs
+
+    :param name: str
+        The approximate name of the program or process
+    :returns: str, None
+        Actual name of the program
+    """
+
+    # Get list of all processes
+    programs_list = popen("wmic process get description, processid").read()
+
+    # print(programs_list)
+
+    # Find all speeches expressions
+    programs_name = findall(fr"{name}.*", programs_list, flags=IGNORECASE)
+
+    # Find a better match if necessary and kill
+    if len(programs_name) > 0:
+        return findall(r"^\S*\b", programs_name[0])[0]
+    else:
+        first_part = ""
+        second_part = ""
+        splitted_name = name.split()
+
+        print(splitted_name)
+
+        if len(splitted_name) == 2:
+            print(f"splitted name: {splitted_name}")
+            first_part = splitted_name[0]
+            second_part = splitted_name[1]
+            print(first_part)
+            print(second_part)
+        elif len(splitted_name) == 3:
+            first_part = splitted_name[0:1]
+            second_part = splitted_name[2]
+        elif len(splitted_name) == 4:
+            first_part = splitted_name[0:1]
+            second_part = splitted_name[2:3]
+
+        print(f"second part: {second_part}")
+
+        first_part_names = findall(fr"{first_part}.*", programs_list, flags=IGNORECASE)
+        second_part_names = findall(
+            fr"{second_part}.*", programs_list, flags=IGNORECASE
+        )
+
+        print()
+        # print(second_part_names)
+
+        if len(first_part_names) > 0 and len(second_part_names) == 0:
+            return findall(r"^\S*\b", first_part_names[0])[0]
+        elif len(first_part_names) == 0 and len(second_part_names) > 0:
+            return findall(r"^\S*\b", second_part_names[0])[0]
+        elif len(first_part_names) > 0 and len(second_part_names) > 0:
+            # Get names of programs
+            first_app_name = findall(r"^\S*\b", first_part_names[0])[0]
+            second_app_name = findall(r"^\S*\b", second_part_names[0])[0]
+
+            # Split names by uppercase
+            first_app_name_splitted = findall(r"[A-Z][^A-Z]*", first_app_name)
+            second_app_name_splitted = findall(r"[A-Z][^A-Z]*", second_app_name)
+
+            # Replace if str is empty after split (does not contain any uppercase letters)
+            if len(first_app_name_splitted) == 0:
+                first_app_name_splitted = [first_app_name]
+            if len(second_app_name_splitted) == 0:
+                second_app_name_splitted = [second_app_name]
+
+            desired_len = len(splitted_name)
+            first_app_name_len = len(first_app_name_splitted)
+            second_app_name_len = len(second_app_name_splitted)
+
+            # Choose best option
+            if abs(desired_len - first_app_name_len) > abs(
+                desired_len - second_app_name_len
+            ):
+                return second_app_name
+            elif abs(desired_len - first_app_name_len) < abs(
+                desired_len - second_app_name_len
+            ):
+                return first_app_name
+            elif abs(desired_len - first_app_name_len) == abs(
+                desired_len - second_app_name_len
+            ):
+                if first_app_name_len > second_app_name_len:
+                    return second_app_name
+                elif first_app_name_len < second_app_name_len:
+                    return first_app_name
+    return None
+
+
+def KillProgram(name: str) -> bool:
+    """
+    Kill program by the name
+
+    :param name: str
+        The approximate name of the program or process
+    :return: bool
+        True if if successful
+    """
+
+    actual_program_name = GetActualProgramName(name)
+
+    print(actual_program_name)
+
+    if actual_program_name is not None:
+        try:
+            system(f"TASKKILL /IM {actual_program_name} /F")
+
+            AssistantSays("App is closed.", common.pixels_y)
+
+            return True
+        except Exception as e:
+            print(e)
+    else:
+        # AssistantSays("I can't find an open app with that name.", common.pixels_y)
+
+        return False
+
+
 def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
     global assistant_speech_rate
 
@@ -382,6 +510,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                 SwitchKeyboardLanguage()
                 is_done = True
 
+            # Search in the Internet
             # Quary: Search\Find about\for ...
             elif action == "Search" or action == "Find":
                 SearchInTheInternet(obj)
@@ -391,6 +520,10 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
             elif action == "Open":
                 OpenProgram(obj)
                 is_done = True
+
+            # Close programs
+            elif action == "Close":
+                is_done = KillProgram(obj)
 
             # Change assistant speech rate
             elif action == "Change" and obj == "the assistant speech rate":
@@ -458,12 +591,12 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                 is_done = True
 
         # Cases of non-recognition of the imperative mood
-        else:
+        if not is_imperative or not is_done:
             # Search in the Internet
             # Quary: What\who is (it) ...
             if splitted_command[0] == "What" or splitted_command[0] == "Who":
                 if (
-                        splitted_command[1] == "is" and splitted_command[2] == "it"
+                    splitted_command[1] == "is" and splitted_command[2] == "it"
                 ) or splitted_command[1] == "is":
                     quary = " ".join(splitted_command)
 
@@ -486,6 +619,17 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 
                 OpenProgram(app_name)
                 is_done = True
+            elif not is_done and splitted_command[0] == "Close":
+                app_name = ""
+                for i in range(1, len(splitted_command)):
+                    app_name += splitted_command[i]
+                    # Add spaces between words
+                    if i != len(splitted_command) - 1:
+                        app_name += " "
+
+                is_done = KillProgram(app_name)
+                if not is_done:
+                    AssistantSays("I can't find an open app with that name.", common.pixels_y)
 
         if not is_done:
             AssistantSays("Sorry, I don't understand.", common.pixels_y)
