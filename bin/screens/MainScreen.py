@@ -1,6 +1,10 @@
 import dearpygui.dearpygui as dpg
 from multiprocessing import freeze_support
-from spacy import load
+from multiprocessing import Process, Manager
+import time
+
+from bin.VoiceoverCallback import VoiceOver
+
 
 from bin.Main import (
     CommandAnalysisCall,
@@ -11,8 +15,6 @@ from bin.Main import (
 )
 import resources.Strings as strings
 from bin.common import Common as common
-
-# nlp = load("en_core_web_trf")
 
 
 def GUICreator(
@@ -58,6 +60,26 @@ def GUICreator(
 
 
 def main():
+    # Shared list with voiceover process
+    manager = Manager()
+    common.voiceover_shared_list = manager.list(range(4))
+    print(f"assistant speech rate from main screen: {common.voiceover_shared_list[0]}")
+    common.voiceover_shared_list[0] = 150
+    common.voiceover_shared_list[1] = ""
+    common.voiceover_shared_list[2] = False
+    common.voiceover_shared_list[3] = False
+
+    # common.voiceover_shared_list[0] = common.assistant_speech_rate
+    # common.voiceover_shared_list[1] = ""
+    # common.voiceover_shared_list[2] = False
+
+    start_time = time.time()
+
+    # Start voiceover process in background
+    common.voiceover_process = Process(target=VoiceOver, args=(common.voiceover_shared_list, start_time))
+    common.voiceover_process.start()
+
+    # Corrects the creation of new windows on startup via executable file
     freeze_support()
 
     vp = dpg.create_viewport(title="Sergey", width=430, height=750)

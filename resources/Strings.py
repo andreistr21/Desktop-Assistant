@@ -10,6 +10,7 @@ help_str = (
     "   * Change the assistant speech rate (example: 'Change the assistant speech rate to 200')\n"
     "   * Change volume (example: 'Set volume to 50' or 'Increase/Decrease volume')\n"
     "   * Shutdown or restart PC (example: 'Shutdown/restart computer' or 'Shutdown/restart computer immediately')\n"
+    "   * Control audio (example: 'Stop/Play music/track', 'Next/Previously music/track')\n"
 )
 
 help_str_for_voice_over = (
@@ -21,4 +22,5 @@ help_str_for_voice_over = (
     "   Change the assistant speech rate\n"
     "   Change volume\n"
     "   Shutdown or restart PC\n"
+    "   Control audio\n"
 )

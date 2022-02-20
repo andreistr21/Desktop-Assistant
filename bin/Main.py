@@ -1,4 +1,4 @@
-from multiprocessing import Process
+import traceback
 from os import system, popen
 from subprocess import run
 from webbrowser import open
@@ -15,10 +15,7 @@ from pynput.keyboard import Key, Controller
 from resources import Strings
 from bin.classes.MasterAudioController import MasterAudioController
 from bin.common import Common as common
-from bin.VoiceoverCallback import VoiceOver
 from bin.CommandAnalyser import GetActionAndObject
-
-import time
 
 
 nlp = load("en_core_web_trf")
@@ -27,13 +24,19 @@ keyboard = Controller()
 
 
 audio_controller = MasterAudioController()
-assistant_speech_rate = 150
-process = None
 
 all_replicas = []
 
 one_line_max_pixels_text = 310
 text_x_pos = 387
+
+
+def StopVoiceOver():
+    """Stops the voiceover process"""
+    # Set stop flag to true
+    common.voiceover_shared_list[3] = True
+    # Set is voiceover now flag to true
+    common.voiceover_shared_list[2] = False
 
 
 def GUIChanger(
@@ -277,12 +280,9 @@ def ChangeVolume(volume_percents, change=False):
 
 
 def CommandAnalysisCall(sender, app_data):
-    global process
-
-    # noinspection PyUnresolvedReferences
-    if process is not None and process.is_alive():
-        # noinspection PyUnresolvedReferences
-        process.terminate()
+    # Stop voiceover process if it running now
+    if common.voiceover_shared_list[2]:
+        StopVoiceOver()
 
     CommandAnalysis(sender=sender, app_data=app_data)
 
@@ -447,7 +447,7 @@ def KillProgram(name: str) -> bool:
     :param name: str
         The approximate name of the program or process
     :return: bool
-        True if if successful
+        True if successful
     """
 
     actual_program_name = GetActualProgramName(name)
@@ -477,8 +477,6 @@ def MultimediaControl(action):
 
 
 def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
-    global assistant_speech_rate
-
     # If use_speech True use command variable
     if not use_speech:
         dpg.set_value(sender, "")
@@ -543,8 +541,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                         volume_rate = int(token.text)
 
                 if volume_rate is not None:
-                    global assistant_speech_rate
-                    assistant_speech_rate = volume_rate
+                    common.voiceover_shared_list[0] = volume_rate
                     AssistantSays("Speech rate is changed", common.pixels_y)
                     is_done = True
 
@@ -590,7 +587,9 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                     system("shutdown /r /t 0")
                     is_done = True
             # Multimedia control
-            elif (action == "Stop" or action == "Play") and (obj == "music" or obj == "track"):
+            elif (action == "Stop" or action == "Play") and (
+                obj == "music" or obj == "track"
+            ):
                 MultimediaControl(action.lower())
                 AssistantSays("Audio stopped or resumed", common.pixels_y)
 
@@ -735,7 +734,6 @@ def AssistantSays(
     logs=True,
     auto_scroll_to_bottom=True,
 ):
-    global process
     global one_line_max_pixels_text
 
     pre_edit_text = text
@@ -746,14 +744,8 @@ def AssistantSays(
         voice_over_text = pre_edit_text
 
     if voiceover:
-
-        start_time = time.time()
-
-        # Start voiceover in background
-        process = Process(
-            target=VoiceOver, args=(voice_over_text, assistant_speech_rate, start_time)
-        )
-        process.start()
+        common.voiceover_shared_list[1] = voice_over_text
+        common.voiceover_shared_list[2] = True
 
     text_len = len(text)
     text_len_pixels = (
@@ -870,22 +862,14 @@ def UserSays(text, pixels, logs=True, auto_scroll_to_bottom=True):
 
 
 def TerminateVoiceover():
-    global process
-
-    # noinspection PyUnresolvedReferences
-    if process is not None and process.is_alive():
-        # noinspection PyUnresolvedReferences
-        process.terminate()
+    if common.voiceover_shared_list[2]:
+        StopVoiceOver()
 
 
 # Speech recognition
 def CommandRecognition():
-    global process
-
-    # noinspection PyUnresolvedReferences
-    if process is not None and process.is_alive():
-        # noinspection PyUnresolvedReferences
-        process.terminate()
+    if common.voiceover_shared_list[2]:
+        StopVoiceOver()
     else:
         # Creates a new `Recognizer` instance
         r = sr.Recognizer()
