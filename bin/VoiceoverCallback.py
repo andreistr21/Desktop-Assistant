@@ -1,6 +1,6 @@
 from pygame import mixer
-import os
-import time
+from os import remove
+from time import time, sleep
 
 
 def DeleteRedundantFile(voiceover_shared_list):
@@ -11,7 +11,7 @@ def DeleteRedundantFile(voiceover_shared_list):
     """
 
     try:
-        os.remove(f"resources/sounds/voiceover{voiceover_shared_list[1] - 1}.mp3")
+        remove(f"resources/sounds/voiceover{voiceover_shared_list[1] - 1}.mp3")
     except PermissionError as e:
         print("Can't delete file: permission denied")
 
@@ -46,7 +46,7 @@ def VoiceOver(voiceover_shared_list, start_time):
     :return: None
     """
 
-    print(f"Voiceover process started: {time.time() - start_time}")
+    print(f"Voiceover process started: {time() - start_time}")
 
     mixer.init()
 
@@ -61,7 +61,7 @@ def VoiceOver(voiceover_shared_list, start_time):
                     StopVoiceover(mixer.music, voiceover_shared_list)
 
                 # Decrease load on CPU during voiceover
-                time.sleep(0.01)
+                sleep(0.01)
             else:
                 StopVoiceover(None, voiceover_shared_list, only_flags=True)
 
@@ -71,4 +71,4 @@ def VoiceOver(voiceover_shared_list, start_time):
                 DeleteRedundantFile(voiceover_shared_list)
 
         # Decrease load on CPU during waiting for voiceover
-        time.sleep(0.05)
+        sleep(0.05)

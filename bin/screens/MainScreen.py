@@ -1,7 +1,6 @@
 import dearpygui.dearpygui as dpg
-from multiprocessing import freeze_support
-from multiprocessing import Process, Manager
-import time
+from multiprocessing import Process, Manager, freeze_support
+from time import time
 
 from bin.VoiceoverCallback import VoiceOver
 
@@ -66,11 +65,11 @@ def main():
     common.voiceover_shared_list[0] = False
     common.voiceover_shared_list[1] = 0
 
-    start_time = time.time()
+    start_time = time()
 
     # Start voiceover process in background
-    common.voiceover_process = Process(target=VoiceOver, args=(common.voiceover_shared_list, start_time))
-    common.voiceover_process.start()
+    voiceover_process = Process(target=VoiceOver, args=(common.voiceover_shared_list, start_time))
+    voiceover_process.start()
 
     # Corrects the creation of new windows on startup via executable file
     freeze_support()
