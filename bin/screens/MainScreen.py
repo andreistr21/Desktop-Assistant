@@ -7,10 +7,10 @@ from bin.VoiceoverCallback import VoiceOver
 
 from bin.Main import (
     CommandAnalysisCall,
-    AssistantSays,
     CommandRecognition,
     TerminateVoiceover,
     ViewportResize,
+    AssistantSaysMethCall,
 )
 import resources.Strings as strings
 from bin.common import Common as common
@@ -68,7 +68,9 @@ def main():
     start_time = time()
 
     # Start voiceover process in background
-    voiceover_process = Process(target=VoiceOver, args=(common.voiceover_shared_list, start_time))
+    voiceover_process = Process(
+        target=VoiceOver, args=(common.voiceover_shared_list, start_time)
+    )
     voiceover_process.start()
 
     # Corrects the creation of new windows on startup via executable file
@@ -117,7 +119,8 @@ def main():
     dpg.set_viewport_resize_callback(ViewportResize)
 
     dpg.show_viewport(vp)
-    AssistantSays(strings.welcome_str, common.pixels_y)
+    AssistantSaysMethCall(strings.welcome_str)
     dpg.start_dearpygui()
+
     # Terminate voiceover if exist
     TerminateVoiceover()

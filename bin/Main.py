@@ -1,19 +1,17 @@
-import time
 import traceback
 from os import system, popen
 from subprocess import run
 from webbrowser import open
 from keyboard import send
 import speech_recognition as sr
-from math import floor, ceil
 import dearpygui.dearpygui as dpg
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 from spacy import load
 from regex import findall, IGNORECASE
 from pynput.keyboard import Key, Controller
-from gtts import gTTS
 
+from bin.classes.Dialog import Dialog
 from resources import Strings
 from bin.classes.MasterAudioController import MasterAudioController
 from bin.common import Common as common
@@ -24,13 +22,19 @@ nlp = load("en_core_web_trf")
 
 keyboard = Controller()
 
-
 audio_controller = MasterAudioController()
 
-all_replicas = []
+dialog = Dialog()
 
-one_line_max_pixels_text = 310
-text_x_pos = 387
+
+def AssistantSaysMethCall(text: str):
+    """AssistantSays Methode call from class
+
+    :param text: str
+        Text to say by assistant
+    :return: None
+    """
+    dialog.AssistantSays(text)
 
 
 def StopVoiceOver():
@@ -59,10 +63,6 @@ def GUIChanger(
 
 def ViewportResize():
     """Window resize handler. Restores dialog."""
-
-    global one_line_max_pixels_text
-    global text_x_pos
-
     viewport_height = dpg.get_viewport_height()
     viewport_width = dpg.get_viewport_width()
 
@@ -70,9 +70,9 @@ def ViewportResize():
     chat_window_width = viewport_width - 18
     input_text_width = viewport_width - 75
     input_text_pos = [10, viewport_height - 70]
-    one_line_max_pixels_text = viewport_width - 120
+    dialog.one_line_max_pixels_text = viewport_width - 120
     image_btn_pos = [viewport_width - 60, viewport_height - 85]
-    text_x_pos = viewport_width - 43
+    dialog.text_x_pos = viewport_width - 43
 
     GUIChanger(
         chat_window_width,
@@ -83,19 +83,18 @@ def ViewportResize():
     )
 
     dpg.delete_item("Chat_window_id", children_only=True)
-    common.pixels_y = [10]
+    dialog.pixels_y = 10
 
-    for item in all_replicas:
+    for item in dialog.all_replicas:
         if item[0] == "Assistant":
-            AssistantSays(
+            dialog.AssistantSays(
                 item[1],
-                common.pixels_y,
                 voiceover=False,
                 logs=False,
                 auto_scroll_to_bottom=False,
             )
         elif item[0] == "User":
-            UserSays(item[1], common.pixels_y, logs=False, auto_scroll_to_bottom=False)
+            dialog.UserSays(item[1], logs=False, auto_scroll_to_bottom=False)
         elif item[0] == "Button":
             ButtonCreate(item[1], logs=False)
 
@@ -109,9 +108,9 @@ def SwitchKeyboardLanguage():
     # noinspection PyBroadException
     try:
         send("shift+alt")
-        AssistantSays("Language is switched", common.pixels_y)
+        dialog.AssistantSays("Language is switched")
     except Exception as _:
-        AssistantSays("Can't changed keyboard language", common.pixels_y)
+        dialog.AssistantSays("Can't changed keyboard language")
 
 
 def QuaryCreator(quary: str) -> tuple:
@@ -248,9 +247,9 @@ def OpenProgram(app_name):
         # Open the program
         system(f"start explorer shell:appsfolder\\{app_id}")
 
-        AssistantSays(f'Opening "{app_name}" ...', common.pixels_y)
+        dialog.AssistantSays(f'Opening "{app_name}" ...')
     else:
-        AssistantSays("No apps found with this name", common.pixels_y)
+        dialog.AssistantSays("No apps found with this name")
 
 
 def ChangeVolume(volume_percents, change=False):
@@ -268,7 +267,7 @@ def ChangeVolume(volume_percents, change=False):
             else:
                 audio_controller.SetVolumeScalar(volume + 0.2, True)
 
-            AssistantSays("Volume increased", common.pixels_y)
+            dialog.AssistantSays("Volume increased")
         elif volume_percents == "-":
             # Volume cannot be less than 0
             if volume - 0.2 < 0:
@@ -276,7 +275,7 @@ def ChangeVolume(volume_percents, change=False):
             else:
                 audio_controller.SetVolumeScalar(volume - 0.2, True)
 
-            AssistantSays("Volume decreased", common.pixels_y)
+            dialog.AssistantSays("Volume decreased")
 
 
 def CommandAnalysisCall(sender, app_data):
@@ -301,22 +300,20 @@ def ButtonCreate(
         url (str):
         logs (bool): if True, remembers the button as created (new)
     """
-    global one_line_max_pixels_text
-
     dpg.add_button(
         label="Open in a browser",
-        width=one_line_max_pixels_text + 14,
+        width=dialog.one_line_max_pixels_text + 14,
         height=25,
         parent="Chat_window_id",
         callback=OpenInABrowserButtonClicked,
         user_data=url,
-        pos=[9, common.pixels_y[0] + 6],
+        pos=[9, dialog.pixels_y + 6],
     )
 
-    common.pixels_y[0] += 35
+    dialog.pixels_y += 35
 
     if logs:
-        all_replicas.append(["Button", url])
+        dialog.all_replicas.append(["Button", url])
 
         # Update interface (render one frame)
         dpg.render_dearpygui_frame()
@@ -337,13 +334,13 @@ def SearchInTheInternet(quary):
 
     soup = BeautifulSoup(response, "html.parser")
     if soup.find(class_="hgKElc"):
-        AssistantSays(soup.find(class_="hgKElc").text, common.pixels_y)
+        dialog.AssistantSays(soup.find(class_="hgKElc").text)
         ButtonCreate(url)
     elif soup.find(class_="kno-rdesc"):
-        AssistantSays(soup.find(class_="kno-rdesc").text[11:-10], common.pixels_y)
+        dialog.AssistantSays(soup.find(class_="kno-rdesc").text[11:-10])
         ButtonCreate(url)
     else:
-        AssistantSays("Opening in a browser...", common.pixels_y)
+        dialog.AssistantSays("Opening in a browser...")
         open(url)
 
 
@@ -458,7 +455,7 @@ def KillProgram(name: str) -> bool:
         try:
             system(f"TASKKILL /IM {actual_program_name} /F")
 
-            AssistantSays("App is closed", common.pixels_y)
+            dialog.AssistantSays("App is closed")
 
             return True
         except Exception as e:
@@ -477,6 +474,15 @@ def MultimediaControl(action):
 
 
 def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
+    """
+    Analise command and run necessary function.
+
+    :param sender:
+    :param app_data:
+    :param use_speech:
+    :param command:
+    :return:
+    """
     # If use_speech True use command variable
     if not use_speech:
         dpg.set_value(sender, "")
@@ -487,9 +493,9 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 
     splitted_command = command.split(" ")
 
-    # Replace the wrong name
-    if splitted_command[0] == "Sergei" or splitted_command[0] == "sergei":
-        splitted_command[0] = "Sergey"
+    # # Replace the wrong name
+    # if splitted_command[0] == "Sergei" or splitted_command[0] == "sergei":
+    #     splitted_command[0] = "Sergey"
 
     FirstLetterToUpperCase(splitted_command)
 
@@ -504,7 +510,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 
     is_imperative, action, obj, doc = GetActionAndObject(nlp, command)
 
-    UserSays(command, common.pixels_y)
+    dialog.UserSays(command)
 
     is_done = False
 
@@ -579,15 +585,14 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                 obj == "music" or obj == "track"
             ):
                 MultimediaControl(action.lower())
-                AssistantSays("Audio stopped or resumed", common.pixels_y)
+                dialog.AssistantSays("Audio stopped or resumed")
 
                 is_done = True
 
             # Help menu
             elif action == "Help" and obj == "me":
-                AssistantSays(
+                dialog.AssistantSays(
                     Strings.help_str,
-                    common.pixels_y,
                     Strings.help_str_for_voice_over,
                     another_text_for_voice_over=True,
                 )
@@ -634,8 +639,8 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 
                 is_done = KillProgram(app_name)
                 if not is_done:
-                    AssistantSays(
-                        "I can't find an open app with that name", common.pixels_y
+                    dialog.AssistantSays(
+                        "I can't find an open app with that name"
                     )
 
             # Multimedia control
@@ -645,7 +650,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                 and (splitted_command[1] == "music" or splitted_command[1] == "track")
             ):
                 MultimediaControl(splitted_command[0].lower())
-                AssistantSays("Next audio", common.pixels_y)
+                dialog.AssistantSays("Next audio")
 
                 is_done = True
             elif (
@@ -654,221 +659,221 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                 and (splitted_command[1] == "music" or splitted_command[1] == "track")
             ):
                 MultimediaControl(splitted_command[0].lower())
-                AssistantSays("Previous audio", common.pixels_y)
+                dialog.AssistantSays("Previous audio")
 
                 is_done = True
 
         if not is_done:
-            AssistantSays("Sorry, I don't understand", common.pixels_y)
+            dialog.AssistantSays("Sorry, I don't understand")
     except Exception as e:
         print(traceback.format_exc())
-        # print(e)
+        print(e)
 
 
-def TextDivisionIntoLines(text):
-    global one_line_max_pixels_text
-
-    max_letters_on_one_line = floor(one_line_max_pixels_text / 7)
-
-    words_in_line_counter = 0
-    word_start = 0
-    letter_index = 0
-    new_lines_counter = 0
-
-    # Create new line if there is max number of letters
-    while letter_index < len(text):
-        if words_in_line_counter == max_letters_on_one_line:
-            if text[letter_index] != " ":
-                if text[letter_index - 1] != " " or text[letter_index + 1] != " ":
-                    # Search for start of word
-                    for j in range(letter_index, 0, -1):
-                        if text[j] != " ":
-                            word_start = j
-                        elif text[j] == " ":
-                            break
-
-            if word_start != 0:
-                letter_index = word_start
-                word_start = 0
-            text = f"{text[:letter_index]}\n{text[letter_index:]}"
-            new_lines_counter += 1
-            words_in_line_counter = 0
-
-        if text[letter_index] == "\n":
-            words_in_line_counter = 0
-        else:
-            words_in_line_counter += 1
-
-        letter_index += 1
-
-    return text, new_lines_counter
-
-
-def NewLinesCounter(text):
-    counter = 0
-
-    for letter in text:
-        if letter == "\n":
-            counter += 1
-
-    return counter
+# def TextDivisionIntoLines(text):
+#     global one_line_max_pixels_text
+# 
+#     max_letters_on_one_line = floor(one_line_max_pixels_text / 7)
+# 
+#     words_in_line_counter = 0
+#     word_start = 0
+#     letter_index = 0
+#     new_lines_counter = 0
+# 
+#     # Create new line if there is max number of letters
+#     while letter_index < len(text):
+#         if words_in_line_counter == max_letters_on_one_line:
+#             if text[letter_index] != " ":
+#                 if text[letter_index - 1] != " " or text[letter_index + 1] != " ":
+#                     # Search for start of word
+#                     for j in range(letter_index, 0, -1):
+#                         if text[j] != " ":
+#                             word_start = j
+#                         elif text[j] == " ":
+#                             break
+# 
+#             if word_start != 0:
+#                 letter_index = word_start
+#                 word_start = 0
+#             text = f"{text[:letter_index]}\n{text[letter_index:]}"
+#             new_lines_counter += 1
+#             words_in_line_counter = 0
+# 
+#         if text[letter_index] == "\n":
+#             words_in_line_counter = 0
+#         else:
+#             words_in_line_counter += 1
+# 
+#         letter_index += 1
+# 
+#     return text, new_lines_counter
 
 
-def CreateMP3File(text: str):
-    """
-    Create mp3 file for voiceover and save it in current directory.
-
-    :param text: str
-        Text for voiceover
-    :return: None
-    """
-    start_time = time.process_time()
-    tts = gTTS(text, lang="en")
-    print(f"Voiceover received: {time.process_time() - start_time}")
-
-    try:
-        start_time = time.process_time()
-        tts.save(f"resources/sounds/voiceover{common.voiceover_shared_list[1]}.mp3")
-        print(f"File saved: {time.process_time() - start_time}")
-        common.voiceover_shared_list[1] += 1
-    except PermissionError as _:
-        print("Can't save file: permission denied")
+# def NewLinesCounter(text):
+#     counter = 0
+# 
+#     for letter in text:
+#         if letter == "\n":
+#             counter += 1
+# 
+#     return counter
 
 
-def AssistantSays(
-    text,
-    pixels,
-    voice_over_text="",
-    another_text_for_voice_over=False,
-    voiceover=True,
-    logs=True,
-    auto_scroll_to_bottom=True,
-):
-    global one_line_max_pixels_text
-
-    pre_edit_text = text
-    if logs:
-        all_replicas.append(["Assistant", text])
-
-    if not another_text_for_voice_over:
-        voice_over_text = pre_edit_text
-
-    if voiceover:
-        CreateMP3File(voice_over_text)
-        common.voiceover_shared_list[0] = True
-
-    text_len = len(text)
-    text_len_pixels = (
-        text_len * 7
-    )  # 7 pixels for one letter, in one line max 310 pixels
-
-    if text_len_pixels <= one_line_max_pixels_text:
-        dpg.add_text(text, parent="Chat_window_id", pos=[15, pixels[0] + 10])
-
-        with dpg.drawlist(
-            width=text_len_pixels + 14,
-            height=30,
-            parent="Chat_window_id",
-            pos=[9, pixels[0] + 6],
-        ):
-            dpg.draw_rectangle(
-                pmin=[0, 0], pmax=[text_len_pixels + 14, 30], rounding=10
-            )
-
-        pixels[0] += 40
-
-    else:
-
-        number_of_lines = NewLinesCounter(text)
-
-        text, lines_to_add = TextDivisionIntoLines(text)
-
-        number_of_lines += lines_to_add + 1
-
-        dpg.add_text(text, parent="Chat_window_id", pos=[15, pixels[0] + 10])
-
-        with dpg.drawlist(
-            width=one_line_max_pixels_text + 14,
-            height=14 * number_of_lines + 15,
-            parent="Chat_window_id",
-            pos=[9, pixels[0] + 6],
-        ):
-            dpg.draw_rectangle(
-                pmin=[0, 0],
-                pmax=[one_line_max_pixels_text + 14, 14 * number_of_lines + 15],
-                rounding=10,
-            )
-
-        pixels[0] += 14 * number_of_lines + 15 + 10
-
-    if auto_scroll_to_bottom:
-        dpg.render_dearpygui_frame()
-        # Scroll to the bottom of the window
-        dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
+# def CreateMP3File(text: str):
+#     """
+#     Create mp3 file for voiceover and save it in current directory.
+# 
+#     :param text: str
+#         Text for voiceover
+#     :return: None
+#     """
+#     start_time = time.process_time()
+#     tts = gTTS(text, lang="en")
+#     print(f"Voiceover received: {time.process_time() - start_time}")
+# 
+#     try:
+#         start_time = time.process_time()
+#         tts.save(f"resources/sounds/voiceover{common.voiceover_shared_list[1]}.mp3")
+#         print(f"File saved: {time.process_time() - start_time}")
+#         common.voiceover_shared_list[1] += 1
+#     except PermissionError as _:
+#         print("Can't save file: permission denied")
 
 
-def UserSays(text, pixels, logs=True, auto_scroll_to_bottom=True):
-    global one_line_max_pixels_text
-    global text_x_pos
+# def dialog.AssistantSays(
+#     text,
+#     pixels,
+#     voice_over_text="",
+#     another_text_for_voice_over=False,
+#     voiceover=True,
+#     logs=True,
+#     auto_scroll_to_bottom=True,
+# ):
+#     global one_line_max_pixels_text
+# 
+#     pre_edit_text = text
+#     if logs:
+#         dialog.all_replicas.append(["Assistant", text])
+# 
+#     if not another_text_for_voice_over:
+#         voice_over_text = pre_edit_text
+# 
+#     if voiceover:
+#         CreateMP3File(voice_over_text)
+#         common.voiceover_shared_list[0] = True
+# 
+#     text_len = len(text)
+#     text_len_pixels = (
+#         text_len * 7
+#     )  # 7 pixels for one letter, in one line max 310 pixels
+# 
+#     if text_len_pixels <= one_line_max_pixels_text:
+#         dpg.add_text(text, parent="Chat_window_id", pos=[15, pixels[0] + 10])
+# 
+#         with dpg.drawlist(
+#             width=text_len_pixels + 14,
+#             height=30,
+#             parent="Chat_window_id",
+#             pos=[9, pixels[0] + 6],
+#         ):
+#             dpg.draw_rectangle(
+#                 pmin=[0, 0], pmax=[text_len_pixels + 14, 30], rounding=10
+#             )
+# 
+#         pixels[0] += 40
+# 
+#     else:
+# 
+#         number_of_lines = NewLinesCounter(text)
+# 
+#         text, lines_to_add = TextDivisionIntoLines(text)
+# 
+#         number_of_lines += lines_to_add + 1
+# 
+#         dpg.add_text(text, parent="Chat_window_id", pos=[15, pixels[0] + 10])
+# 
+#         with dpg.drawlist(
+#             width=one_line_max_pixels_text + 14,
+#             height=14 * number_of_lines + 15,
+#             parent="Chat_window_id",
+#             pos=[9, pixels[0] + 6],
+#         ):
+#             dpg.draw_rectangle(
+#                 pmin=[0, 0],
+#                 pmax=[one_line_max_pixels_text + 14, 14 * number_of_lines + 15],
+#                 rounding=10,
+#             )
+# 
+#         pixels[0] += 14 * number_of_lines + 15 + 10
+# 
+#     if auto_scroll_to_bottom:
+#         dpg.render_dearpygui_frame()
+#         # Scroll to the bottom of the window
+#         dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
 
-    if logs:
-        all_replicas.append(["User", text])
 
-    text_len = len(text)
-    text_len_pixels = (
-        text_len * 7
-    )  # 7 pixels for one letter, in one line max 310 pixels
-
-    if text_len_pixels <= one_line_max_pixels_text:
-        dpg.add_text(
-            text,
-            parent="Chat_window_id",
-            pos=[text_x_pos - text_len_pixels, pixels[0] + 10],
-        )
-
-        with dpg.drawlist(
-            width=text_len_pixels + 14,
-            height=30,
-            parent="Chat_window_id",
-            pos=[text_x_pos + 6 - text_len_pixels - 12, pixels[0] + 6],
-        ):
-            dpg.draw_rectangle(
-                pmin=[0, 0], pmax=[text_len_pixels + 14, 30], rounding=10
-            )
-
-        pixels[0] += 40
-    else:
-        number_of_lines = ceil(text_len_pixels / one_line_max_pixels_text)
-        number_of_lines += NewLinesCounter(text)
-
-        text, lines_to_add = TextDivisionIntoLines(text)
-
-        number_of_lines += lines_to_add
-
-        dpg.add_text(
-            text,
-            parent="Chat_window_id",
-            pos=[text_x_pos - one_line_max_pixels_text, pixels[0] + 10],
-        )
-
-        with dpg.drawlist(
-            width=one_line_max_pixels_text + 14,
-            height=14 * number_of_lines + 15,
-            parent="Chat_window_id",
-            pos=[text_x_pos + 6 - one_line_max_pixels_text - 12, pixels[0] + 6],
-        ):
-            dpg.draw_rectangle(
-                pmin=[0, 0],
-                pmax=[one_line_max_pixels_text + 14, 14 * number_of_lines + 15],
-                rounding=10,
-            )
-
-        pixels[0] += 14 * number_of_lines + 15 + 10
-
-    if auto_scroll_to_bottom:
-        dpg.render_dearpygui_frame()
-        # Scroll to the bottom of the window
-        dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
+# def dialog.UserSays(text, pixels, logs=True, auto_scroll_to_bottom=True):
+#     global one_line_max_pixels_text
+#     global text_x_pos
+# 
+#     if logs:
+#         dialog.all_replicas.append(["User", text])
+# 
+#     text_len = len(text)
+#     text_len_pixels = (
+#         text_len * 7
+#     )  # 7 pixels for one letter, in one line max 310 pixels
+# 
+#     if text_len_pixels <= one_line_max_pixels_text:
+#         dpg.add_text(
+#             text,
+#             parent="Chat_window_id",
+#             pos=[text_x_pos - text_len_pixels, pixels[0] + 10],
+#         )
+# 
+#         with dpg.drawlist(
+#             width=text_len_pixels + 14,
+#             height=30,
+#             parent="Chat_window_id",
+#             pos=[text_x_pos + 6 - text_len_pixels - 12, pixels[0] + 6],
+#         ):
+#             dpg.draw_rectangle(
+#                 pmin=[0, 0], pmax=[text_len_pixels + 14, 30], rounding=10
+#             )
+# 
+#         pixels[0] += 40
+#     else:
+#         number_of_lines = ceil(text_len_pixels / one_line_max_pixels_text)
+#         number_of_lines += NewLinesCounter(text)
+# 
+#         text, lines_to_add = TextDivisionIntoLines(text)
+# 
+#         number_of_lines += lines_to_add
+# 
+#         dpg.add_text(
+#             text,
+#             parent="Chat_window_id",
+#             pos=[text_x_pos - one_line_max_pixels_text, pixels[0] + 10],
+#         )
+# 
+#         with dpg.drawlist(
+#             width=one_line_max_pixels_text + 14,
+#             height=14 * number_of_lines + 15,
+#             parent="Chat_window_id",
+#             pos=[text_x_pos + 6 - one_line_max_pixels_text - 12, pixels[0] + 6],
+#         ):
+#             dpg.draw_rectangle(
+#                 pmin=[0, 0],
+#                 pmax=[one_line_max_pixels_text + 14, 14 * number_of_lines + 15],
+#                 rounding=10,
+#             )
+# 
+#         pixels[0] += 14 * number_of_lines + 15 + 10
+# 
+#     if auto_scroll_to_bottom:
+#         dpg.render_dearpygui_frame()
+#         # Scroll to the bottom of the window
+#         dpg.set_y_scroll("Chat_window_id", dpg.get_y_scroll_max("Chat_window_id"))
 
 
 def TerminateVoiceover():
@@ -884,7 +889,7 @@ def CommandRecognition():
         # Creates a new `Recognizer` instance
         r = sr.Recognizer()
         with sr.Microphone() as source:
-            AssistantSays("Listening...", common.pixels_y)
+            dialog.AssistantSays("Listening...")
             # Listening for speech
             audio = r.listen(source)
             # noinspection PyBroadException
@@ -892,4 +897,4 @@ def CommandRecognition():
                 command = r.recognize_google(audio)
                 CommandAnalysis(use_speech=True, command=command)
             except Exception as _:
-                AssistantSays("Try Again", common.pixels_y)
+                dialog.AssistantSays("Try Again")
