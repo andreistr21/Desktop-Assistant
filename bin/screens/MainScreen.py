@@ -9,8 +9,8 @@ from bin.Main import (
     CommandAnalysisCall,
     CommandRecognition,
     TerminateVoiceover,
-    ViewportResize,
     AssistantSaysMethCall,
+    ViewportResizeMethCall,
 )
 import resources.Strings as strings
 from bin.common import Common as common
@@ -116,7 +116,7 @@ def main():
     dpg.set_primary_window("Main_window_id", True)
     dpg.setup_dearpygui(viewport=vp)
 
-    dpg.set_viewport_resize_callback(ViewportResize)
+    dpg.set_viewport_resize_callback(ViewportResizeMethCall)
 
     dpg.show_viewport(vp)
     AssistantSaysMethCall(strings.welcome_str)
