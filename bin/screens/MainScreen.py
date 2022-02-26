@@ -62,16 +62,9 @@ def GUICreator(
 def main():
     # Shared list with voiceover process
     manager = Manager()
-    common.voiceover_shared_list = manager.list(range(4))
-    print(f"assistant speech rate from main screen: {common.voiceover_shared_list[0]}")
-    common.voiceover_shared_list[0] = 150
-    common.voiceover_shared_list[1] = ""
-    common.voiceover_shared_list[2] = False
-    common.voiceover_shared_list[3] = False
-
-    # common.voiceover_shared_list[0] = common.assistant_speech_rate
-    # common.voiceover_shared_list[1] = ""
-    # common.voiceover_shared_list[2] = False
+    common.voiceover_shared_list = manager.list(range(2))
+    common.voiceover_shared_list[0] = False
+    common.voiceover_shared_list[1] = 0
 
     start_time = time.time()
 

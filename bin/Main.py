@@ -1,3 +1,4 @@
+import time
 import traceback
 from os import system, popen
 from subprocess import run
@@ -11,6 +12,7 @@ from bs4 import BeautifulSoup
 from spacy import load
 from regex import findall, IGNORECASE
 from pynput.keyboard import Key, Controller
+from gtts import gTTS
 
 from resources import Strings
 from bin.classes.MasterAudioController import MasterAudioController
@@ -33,10 +35,8 @@ text_x_pos = 387
 
 def StopVoiceOver():
     """Stops the voiceover process"""
-    # Set stop flag to true
-    common.voiceover_shared_list[3] = True
-    # Set is voiceover now flag to true
-    common.voiceover_shared_list[2] = False
+    # Set is_speaking_now flag to true
+    common.voiceover_shared_list[0] = False
 
 
 def GUIChanger(
@@ -281,7 +281,7 @@ def ChangeVolume(volume_percents, change=False):
 
 def CommandAnalysisCall(sender, app_data):
     # Stop voiceover process if it running now
-    if common.voiceover_shared_list[2]:
+    if common.voiceover_shared_list[0]:
         StopVoiceOver()
 
     CommandAnalysis(sender=sender, app_data=app_data)
@@ -533,18 +533,6 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
             elif action == "Close" and obj != "you":
                 is_done = KillProgram(obj)
 
-            # Change assistant speech rate
-            elif action == "Change" and obj == "the assistant speech rate":
-                volume_rate = None
-                for token in doc:
-                    if token.pos_ == "NUM":
-                        volume_rate = int(token.text)
-
-                if volume_rate is not None:
-                    common.voiceover_shared_list[0] = volume_rate
-                    AssistantSays("Speech rate is changed", common.pixels_y)
-                    is_done = True
-
             # Change PC volume
             if action == "Set" and obj == "volume":
                 volume_percents = None
@@ -673,7 +661,8 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
         if not is_done:
             AssistantSays("Sorry, I don't understand", common.pixels_y)
     except Exception as e:
-        print(e)
+        print(traceback.format_exc())
+        # print(e)
 
 
 def TextDivisionIntoLines(text):
@@ -725,6 +714,27 @@ def NewLinesCounter(text):
     return counter
 
 
+def CreateMP3File(text: str):
+    """
+    Create mp3 file for voiceover and save it in current directory.
+
+    :param text: str
+        Text for voiceover
+    :return: None
+    """
+    start_time = time.process_time()
+    tts = gTTS(text, lang="en")
+    print(f"Voiceover received: {time.process_time() - start_time}")
+
+    try:
+        start_time = time.process_time()
+        tts.save(f"resources/sounds/voiceover{common.voiceover_shared_list[1]}.mp3")
+        print(f"File saved: {time.process_time() - start_time}")
+        common.voiceover_shared_list[1] += 1
+    except PermissionError as _:
+        print("Can't save file: permission denied")
+
+
 def AssistantSays(
     text,
     pixels,
@@ -744,8 +754,8 @@ def AssistantSays(
         voice_over_text = pre_edit_text
 
     if voiceover:
-        common.voiceover_shared_list[1] = voice_over_text
-        common.voiceover_shared_list[2] = True
+        CreateMP3File(voice_over_text)
+        common.voiceover_shared_list[0] = True
 
     text_len = len(text)
     text_len_pixels = (
@@ -862,13 +872,13 @@ def UserSays(text, pixels, logs=True, auto_scroll_to_bottom=True):
 
 
 def TerminateVoiceover():
-    if common.voiceover_shared_list[2]:
+    if common.voiceover_shared_list[0]:
         StopVoiceOver()
 
 
 # Speech recognition
 def CommandRecognition():
-    if common.voiceover_shared_list[2]:
+    if common.voiceover_shared_list[0]:
         StopVoiceOver()
     else:
         # Creates a new `Recognizer` instance

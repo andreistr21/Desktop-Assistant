@@ -5,6 +5,6 @@ pixels_y = [10]
 voiceover_process = None
 
 # assistant_speech_rate = 150
-voiceover_shared_list = [None, None, None, None]
-print(voiceover_shared_list)
 
+# [0] - switch (bool) (True - is speaking now), [1] - voiceover files counter
+voiceover_shared_list = [None, None]
