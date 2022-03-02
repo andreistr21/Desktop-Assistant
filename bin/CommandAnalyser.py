@@ -1,24 +1,26 @@
 import traceback
-from os import system, popen
-from subprocess import run
-from webbrowser import open
-from keyboard import send
-import speech_recognition as sr
-import dearpygui.dearpygui as dpg
-from urllib.request import Request, urlopen
-from bs4 import BeautifulSoup
-from spacy import load
-from regex import findall, IGNORECASE
-from pynput.keyboard import Key, Controller
+from os import system
 
-from resources import Strings
-from bin.classes.MasterAudioController import MasterAudioController
-from bin.common import Common as common
+import dearpygui.dearpygui as dpg
+import speech_recognition as sr
+from pynput.keyboard import Controller
+from spacy import load
+
+from bin.Functions import (
+    SwitchKeyboardLanguage,
+    SearchInTheInternet,
+    OpenProgram,
+    KillProgram,
+    ChangeVolume,
+    MultimediaControl,
+    StopVoiceOver,
+)
 from bin.TextAnalyser import GetActionAndObject
 from bin.classes.Dialog import Dialog
+from bin.classes.MasterAudioController import MasterAudioController
 from bin.classes.Screen import Screen
-from bin.Functions import SwitchKeyboardLanguage, SearchInTheInternet, OpenProgram, KillProgram, ChangeVolume, MultimediaControl, StopVoiceOver
-
+from bin.common import Common as common
+from resources import Strings
 
 nlp = load("en_core_web_trf")
 
@@ -224,9 +226,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
 
                 is_done = KillProgram(dialog, app_name)
                 if not is_done:
-                    dialog.AssistantSays(
-                        "I can't find an open app with that name"
-                    )
+                    dialog.AssistantSays("I can't find an open app with that name")
 
             # Multimedia control
             elif (

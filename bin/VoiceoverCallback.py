@@ -52,7 +52,9 @@ def VoiceOver(voiceover_shared_list, start_time):
 
     while 1:
         if voiceover_shared_list[0]:
-            mixer.music.load(f"resources/sounds/voiceover{voiceover_shared_list[1] - 1}.mp3")
+            mixer.music.load(
+                f"resources/sounds/voiceover{voiceover_shared_list[1] - 1}.mp3"
+            )
             mixer.music.play()
 
             # Loop for voiceover

@@ -5,7 +5,7 @@ from time import time
 from bin.VoiceoverCallback import VoiceOver
 
 
-from bin.Main import (
+from bin.CommandAnalyser import (
     CommandAnalysisCall,
     CommandRecognition,
     TerminateVoiceover,

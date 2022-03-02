@@ -17,13 +17,13 @@ class Dialog:
         self.pixels_y = 10
 
     def AssistantSays(
-            self,
-            text,
-            voice_over_text="",
-            another_text_for_voice_over=False,
-            voiceover=True,
-            logs=True,
-            auto_scroll_to_bottom=True,
+        self,
+        text,
+        voice_over_text="",
+        another_text_for_voice_over=False,
+        voiceover=True,
+        logs=True,
+        auto_scroll_to_bottom=True,
     ):
         pre_edit_text = text
         if logs:
@@ -38,17 +38,17 @@ class Dialog:
 
         text_len = len(text)
         text_len_pixels = (
-                text_len * 7
+            text_len * 7
         )  # 7 pixels for one letter, in one line max 310 pixels
 
         if text_len_pixels <= self.one_line_max_pixels_text:
             dpg.add_text(text, parent="Chat_window_id", pos=[15, self.pixels_y + 10])
 
             with dpg.drawlist(
-                    width=text_len_pixels + 14,
-                    height=30,
-                    parent="Chat_window_id",
-                    pos=[9, self.pixels_y + 6],
+                width=text_len_pixels + 14,
+                height=30,
+                parent="Chat_window_id",
+                pos=[9, self.pixels_y + 6],
             ):
                 dpg.draw_rectangle(
                     pmin=[0, 0], pmax=[text_len_pixels + 14, 30], rounding=10
@@ -67,14 +67,17 @@ class Dialog:
             dpg.add_text(text, parent="Chat_window_id", pos=[15, self.pixels_y + 10])
 
             with dpg.drawlist(
-                    width=self.one_line_max_pixels_text + 14,
-                    height=14 * number_of_lines + 15,
-                    parent="Chat_window_id",
-                    pos=[9, self.pixels_y + 6],
+                width=self.one_line_max_pixels_text + 14,
+                height=14 * number_of_lines + 15,
+                parent="Chat_window_id",
+                pos=[9, self.pixels_y + 6],
             ):
                 dpg.draw_rectangle(
                     pmin=[0, 0],
-                    pmax=[self.one_line_max_pixels_text + 14, 14 * number_of_lines + 15],
+                    pmax=[
+                        self.one_line_max_pixels_text + 14,
+                        14 * number_of_lines + 15,
+                    ],
                     rounding=10,
                 )
 
@@ -91,7 +94,7 @@ class Dialog:
 
         text_len = len(text)
         text_len_pixels = (
-                text_len * 7
+            text_len * 7
         )  # 7 pixels for one letter, in one line max 310 pixels
 
         if text_len_pixels <= self.one_line_max_pixels_text:
@@ -102,10 +105,10 @@ class Dialog:
             )
 
             with dpg.drawlist(
-                    width=text_len_pixels + 14,
-                    height=30,
-                    parent="Chat_window_id",
-                    pos=[self.text_x_pos + 6 - text_len_pixels - 12, self.pixels_y + 6],
+                width=text_len_pixels + 14,
+                height=30,
+                parent="Chat_window_id",
+                pos=[self.text_x_pos + 6 - text_len_pixels - 12, self.pixels_y + 6],
             ):
                 dpg.draw_rectangle(
                     pmin=[0, 0], pmax=[text_len_pixels + 14, 30], rounding=10
@@ -123,18 +126,27 @@ class Dialog:
             dpg.add_text(
                 text,
                 parent="Chat_window_id",
-                pos=[self.text_x_pos - self.one_line_max_pixels_text, self.pixels_y + 10],
+                pos=[
+                    self.text_x_pos - self.one_line_max_pixels_text,
+                    self.pixels_y + 10,
+                ],
             )
 
             with dpg.drawlist(
-                    width=self.one_line_max_pixels_text + 14,
-                    height=14 * number_of_lines + 15,
-                    parent="Chat_window_id",
-                    pos=[self.text_x_pos + 6 - self.one_line_max_pixels_text - 12, self.pixels_y + 6],
+                width=self.one_line_max_pixels_text + 14,
+                height=14 * number_of_lines + 15,
+                parent="Chat_window_id",
+                pos=[
+                    self.text_x_pos + 6 - self.one_line_max_pixels_text - 12,
+                    self.pixels_y + 6,
+                ],
             ):
                 dpg.draw_rectangle(
                     pmin=[0, 0],
-                    pmax=[self.one_line_max_pixels_text + 14, 14 * number_of_lines + 15],
+                    pmax=[
+                        self.one_line_max_pixels_text + 14,
+                        14 * number_of_lines + 15,
+                    ],
                     rounding=10,
                 )
 
@@ -211,4 +223,3 @@ class Dialog:
             letter_index += 1
 
         return text, new_lines_counter
-    
