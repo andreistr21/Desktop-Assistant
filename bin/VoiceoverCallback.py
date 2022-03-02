@@ -11,7 +11,7 @@ def DeleteRedundantFile(voiceover_shared_list):
     """
 
     try:
-        remove(f"resources/sounds/voiceover{voiceover_shared_list[1] - 1}.mp3")
+        remove(f"resources/temp/voiceover{voiceover_shared_list[1] - 1}.mp3")
     except PermissionError as e:
         print("Can't delete file: permission denied")
 
@@ -53,7 +53,7 @@ def VoiceOver(voiceover_shared_list, start_time):
     while 1:
         if voiceover_shared_list[0]:
             mixer.music.load(
-                f"resources/sounds/voiceover{voiceover_shared_list[1] - 1}.mp3"
+                f"resources/temp/voiceover{voiceover_shared_list[1] - 1}.mp3"
             )
             mixer.music.play()
 
