@@ -172,7 +172,7 @@ class Dialog:
 
         try:
             start_time = process_time()
-            tts.save(f"resources/sounds/voiceover{common.voiceover_shared_list[1]}.mp3")
+            tts.save(f"resources/temp/voiceover{common.voiceover_shared_list[1]}.mp3")
             print(f"File saved: {process_time() - start_time}")
             common.voiceover_shared_list[1] += 1
         except PermissionError as _:
