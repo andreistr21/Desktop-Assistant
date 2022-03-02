@@ -4,14 +4,13 @@ from bs4 import BeautifulSoup
 from subprocess import run
 from os import system, popen
 from regex import findall, IGNORECASE
-from pynput.keyboard import Key, Controller
+from pynput.keyboard import Key
 
 from bin.common import Common as common
 
 
 def SwitchKeyboardLanguage(dialog):
     """Change keyboard language"""
-
     # noinspection PyBroadException
     try:
         send("shift+alt")
@@ -27,7 +26,6 @@ def QuaryCreator(quary: str) -> tuple:
     Returns:
         tuple(str, str)
     """
-
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36"
     }
@@ -73,7 +71,6 @@ def ChooseAppFromList(dictionary, app_name):
 
 def PowerShellOutputParsing(string, app_name):
     """Parsing output of powershell to dictionary"""
-
     apps_dictionary = {}
     name_pos = -8
     app_id_pos = -8
@@ -119,10 +116,11 @@ def PowerShellOutputParsing(string, app_name):
 
 def SearchInTheInternet(dialog, screen, quary):
     """Internet search for a given query
-    Args:
-        quary (String)
-    Returns:
-        None
+
+    :param dialog: obj
+    :param screen: obj
+    :param quary: str
+    :return: None
     """
     url, headers = QuaryCreator(quary)
     request = Request(url, headers=headers)
@@ -179,7 +177,6 @@ def GetActualProgramName(name: str):
     :returns: str, None
         Actual name of the program
     """
-
     # Get list of all processes
     programs_list = popen("wmic process get description, processid").read()
 
@@ -264,15 +261,14 @@ def GetActualProgramName(name: str):
 
 
 def KillProgram(dialog, name: str) -> bool:
-    """
-    Kill program by the name
+    """Kill program by the name
 
+    :param dialog: obj
     :param name: str
         The approximate name of the program or process
     :return: bool
         True if successful
     """
-
     actual_program_name = GetActualProgramName(name)
 
     print(actual_program_name)
