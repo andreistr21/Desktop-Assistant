@@ -48,6 +48,9 @@ def VoiceOver(voiceover_shared_list, start_time):
 
     print(f"Voiceover process started: {time() - start_time}")
 
+    # signal that process started
+    voiceover_shared_list[2] = True
+
     mixer.init()
 
     while 1:

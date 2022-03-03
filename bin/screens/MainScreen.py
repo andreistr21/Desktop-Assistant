@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 from multiprocessing import Process, Manager, freeze_support
-from time import time
+from time import time, sleep
 
 from bin.VoiceoverCallback import VoiceOver
 
@@ -61,9 +61,10 @@ def GUICreator(
 def main():
     # Shared list with voiceover process
     manager = Manager()
-    common.voiceover_shared_list = manager.list(range(2))
+    common.voiceover_shared_list = manager.list(range(len(common.voiceover_shared_list)))
     common.voiceover_shared_list[0] = False
     common.voiceover_shared_list[1] = 0
+    common.voiceover_shared_list[2] = False
 
     start_time = time()
 
@@ -118,8 +119,14 @@ def main():
 
     dpg.set_viewport_resize_callback(ViewportResizeMethCall)
 
+    # Wait for voiceover process
+    while not common.voiceover_shared_list[2]:
+        sleep(0.1)
+
     dpg.show_viewport(vp)
+
     AssistantSaysMethCall(strings.welcome_str)
+
     dpg.start_dearpygui()
 
     # Terminate voiceover if exist
