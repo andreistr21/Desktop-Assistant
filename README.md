@@ -23,6 +23,10 @@ This is a simple desktop assistant with GUI that will allow you control your PC 
 - Executable file: https://e.pcloud.link/publink/show?code=XZ42B5Z1f2QcR3AYMFQXKGUA5PXRSDiR2Cy
 
 
+## Presentation
+https://github.com/andreistr21/Desktop-Assistant/assets/60103919/b7ccadbc-914b-4a4a-b76a-aeedafe388ec
+
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
