@@ -240,7 +240,7 @@ def CommandAnalysis(sender="", app_data="", use_speech=False, command=""):
                 is_done = True
             elif (
                 not is_done
-                and splitted_command[0] == "Previously"
+                and splitted_command[0] == "Previous"
                 and (splitted_command[1] == "music" or splitted_command[1] == "track")
             ):
                 MultimediaControl(keyboard, splitted_command[0].lower())

@@ -315,7 +315,7 @@ def ChangeVolume(audio_controller, dialog, volume_percents, change=False):
 def MultimediaControl(keyboard, action):
     if action == "next":
         keyboard.press(Key.media_next)
-    elif action == "previously":
+    elif action == "previous":
         keyboard.press(Key.media_previous)
     elif action == "stop" or action == "play":
         keyboard.press(Key.media_play_pause)
