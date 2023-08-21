@@ -24,6 +24,9 @@ This is a simple desktop assistant with GUI that will allow you control your PC 
 
 
 ## Presentation
+
+### Note: *It is recommended to turn on the sound on the video to hear the voice of the assistant*
+
 https://github.com/andreistr21/Desktop-Assistant/assets/60103919/b7ccadbc-914b-4a4a-b76a-aeedafe388ec
 
 
